@@ -24,7 +24,7 @@
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  html,body{background:#0b0f1a}
+  html,body{background:#0b0f1a; height:100%; overscroll-behavior-y:none;}
   body{font-family:'Inter',sans-serif}
   h1,h2,h3,.font-display{font-family:'Manrope',sans-serif}
   .no-scrollbar::-webkit-scrollbar{display:none}
@@ -43,6 +43,15 @@
   .side-link:hover{background:#131b2e;color:#fff}
   .side-link.active{background:#b5324a1a;color:#fff}
   .side-link svg{flex-shrink:0}
+  /* нижняя панель на телефоне: fixed + компенсация "прыжков" при скролле (адресная строка мобильного браузера) */
+  .bottom-tabbar{
+    position:fixed; left:0; right:0; bottom:0; z-index:40;
+    transform:translateZ(0);
+    -webkit-transform:translate3d(0,0,0);
+    will-change:transform;
+  }
+  .tab-btn{color:#8ea0c4}
+  .tab-btn.active{color:#e8ecf5}
 </style>
 </head>
 
@@ -62,9 +71,13 @@
       </div>
     </div>
 
-    <button class="nav-home side-link active">
+    <button class="nav-home side-link">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
       Лента
+    </button>
+    <button class="nav-friends side-link">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 20v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Друзья
     </button>
     <button class="nav-dm side-link relative">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 20.5l1.5-4.5A8.4 8.4 0 1 1 21 11.5z"/></svg>
@@ -109,49 +122,107 @@
 
     <main class="max-w-2xl mx-auto md:mx-0 md:max-w-none px-3 pb-24 md:pb-10 pt-4">
       <div id="banner" class="hidden mb-4 rounded-xl border border-gold/40 bg-gold/10 text-gold text-sm p-3"></div>
-      <div id="tagBar" class="mb-3 flex gap-2 overflow-x-auto no-scrollbar"></div>
-      <div id="feed" class="space-y-4"></div>
-      <div id="feedState" class="text-center text-soft py-10 text-sm">Загрузка ленты…</div>
-      <button id="btnMore" class="hidden w-full mt-4 border border-line hover:border-accent transition py-3 rounded-xl text-sm text-soft">Показать ещё</button>
+
+      <!-- ===== ЛЕНТА ===== -->
+      <section id="viewFeed">
+        <div id="tagBar" class="mb-3 flex gap-2 overflow-x-auto no-scrollbar"></div>
+        <div id="feed" class="space-y-4"></div>
+        <div id="feedState" class="text-center text-soft py-10 text-sm">Загрузка ленты…</div>
+        <button id="btnMore" class="hidden w-full mt-4 border border-line hover:border-accent transition py-3 rounded-xl text-sm text-soft">Показать ещё</button>
+      </section>
+
+      <!-- ===== ДРУЗЬЯ ===== -->
+      <section id="viewFriends" class="hidden">
+        <h2 class="font-display text-xl font-bold mb-3">Друзья</h2>
+        <input id="friendSearch" placeholder="Найти по юзернейму…" autocomplete="off"
+          class="w-full bg-card border border-line rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-accent mb-3" />
+        <div id="friendSearchResults" class="space-y-1 mb-2"></div>
+        <div id="friendRequestsBox" class="mb-2"></div>
+        <div class="text-xs font-semibold text-soft uppercase tracking-wide mb-2 mt-3">Мои друзья</div>
+        <div id="friendsListBox" class="space-y-1"></div>
+      </section>
+
+      <!-- ===== СООБЩЕНИЯ (полноценный раздел, не всплывающее окно) ===== -->
+      <section id="viewMessages" class="hidden">
+        <div id="dmListView" class="flex flex-col">
+          <h2 class="font-display text-xl font-bold mb-3">Сообщения</h2>
+          <input id="dmSearch" placeholder="Найти по юзернейму…" autocomplete="off"
+            class="w-full bg-card border border-line rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-accent mb-3" />
+          <div id="dmList" class="space-y-1"></div>
+        </div>
+        <div id="dmThreadView" class="hidden flex-col" style="height:calc(100vh - 220px)">
+          <div class="flex items-center gap-2 mb-3">
+            <button id="dmBack" class="text-soft hover:text-white text-xl px-1">←</button>
+            <img id="dmThreadAvatar" class="w-9 h-9 rounded-full bg-ink" alt="" />
+            <div class="min-w-0">
+              <div id="dmThreadNick" class="text-sm font-semibold truncate"></div>
+              <div id="dmThreadUsername" class="text-[11px] text-soft truncate"></div>
+            </div>
+          </div>
+          <div id="dmMessages" class="flex-1 overflow-y-auto space-y-2 pr-1"></div>
+          <div class="flex gap-2 mt-3 pb-2">
+            <input id="dmInput" placeholder="Сообщение…" maxlength="1000"
+              class="flex-1 bg-card border border-line rounded-xl px-3 py-2.5 text-sm outline-none focus:border-accent" />
+            <button id="dmSend" class="bg-accent hover:bg-accentDim transition px-4 rounded-xl text-sm font-semibold">→</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== ПРОФИЛЬ (полноценная страница) ===== -->
+      <section id="viewProfile" class="hidden">
+        <div class="bg-card border border-line rounded-2xl p-5 text-center">
+          <img id="profAvatar" class="w-20 h-20 rounded-full mx-auto ring-2 ring-accent bg-ink" alt="" />
+          <div id="profNick" class="mt-3 font-display font-bold text-lg"></div>
+          <div id="profUsername" class="text-xs text-soft">@username</div>
+          <div class="grid grid-cols-2 gap-2 mt-4 text-sm max-w-xs mx-auto">
+            <div class="bg-ink rounded-xl py-3"><div id="statPosts" class="font-bold text-lg">0</div><div class="text-soft text-xs">постов</div></div>
+            <div class="bg-ink rounded-xl py-3"><div id="statLikes" class="font-bold text-lg">0</div><div class="text-soft text-xs">лайков собрано</div></div>
+          </div>
+          <button id="btnLogout" class="mt-4 border border-line hover:border-rose-500 hover:text-rose-400 transition py-2 px-4 rounded-xl text-sm">Выйти</button>
+        </div>
+        <div class="mt-4">
+          <div class="text-xs font-semibold text-soft uppercase tracking-wide mb-2">Мои посты — кто видит</div>
+          <div id="profPosts" class="space-y-2"></div>
+        </div>
+      </section>
     </main>
   </div>
 </div>
 
 <!-- ==== MOBILE BOTTOM TAB BAR (VK-style) ==== -->
-<nav class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur border-t border-line flex items-stretch h-16 pb-[env(safe-area-inset-bottom)]">
-  <button class="nav-home flex-1 flex flex-col items-center justify-center gap-0.5 text-soft text-[11px] font-medium">
+<nav class="bottom-tabbar md:hidden bg-card/98 border-t border-line flex items-stretch h-16 pb-[env(safe-area-inset-bottom)]">
+  <button class="nav-home tab-btn flex-1 flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
     Лента
   </button>
-  <button class="nav-dm flex-1 flex flex-col items-center justify-center gap-0.5 text-soft text-[11px] font-medium relative">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 20.5l1.5-4.5A8.4 8.4 0 1 1 21 11.5z"/></svg>
-    Чаты
-    <span class="dm-badge hidden absolute top-1 right-[28%] bg-accent text-white rounded-full text-[9px] px-1.5">0</span>
+  <button class="nav-friends tab-btn flex-1 flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 20v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 20v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    Друзья
   </button>
   <button class="nav-newpost flex-1 flex flex-col items-center justify-center">
     <span class="w-11 h-11 -mt-5 rounded-full bg-accent shadow-lg shadow-accent/30 grid place-items-center">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
     </span>
   </button>
-  <button class="nav-admin hidden flex-1 flex flex-col items-center justify-center gap-0.5 text-gold text-[11px] font-medium relative">
-    🛡<span class="admin-badge hidden absolute top-1 right-[28%] bg-gold text-ink rounded-full text-[9px] px-1.5">0</span>
-    <span class="text-[10px]">Модер.</span>
+  <button class="nav-dm tab-btn flex-1 flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium relative">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.9-.9L3 20.5l1.5-4.5A8.4 8.4 0 1 1 21 11.5z"/></svg>
+    Чаты
+    <span class="dm-badge hidden absolute top-1 right-[28%] bg-accent text-white rounded-full text-[9px] px-1.5">0</span>
   </button>
-  <button class="nav-profile flex-1 flex flex-col items-center justify-center gap-0.5 text-soft text-[11px] font-medium">
+  <button class="nav-profile tab-btn flex-1 flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium">
     <img class="profile-avatar-img w-6 h-6 rounded-full object-cover hidden" alt="" />
     <svg class="profile-avatar-ph" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6 8-6s8 2 8 6"/></svg>
     Профиль
   </button>
 </nav>
 
-<!-- Вход / Регистрация: ник + юзернейм + пароль, без телефона и почты -->
+<!-- Вход / Регистрация -->
 <div id="authModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
   <div class="max-w-sm mx-auto mt-10 bg-card border border-line rounded-2xl p-5 fade-in">
     <div class="flex bg-ink rounded-xl p-1 mb-4 text-sm">
       <button id="tabReg" class="flex-1 py-2 rounded-lg font-semibold bg-accent">Регистрация</button>
       <button id="tabLogin" class="flex-1 py-2 rounded-lg font-semibold text-soft">Вход</button>
     </div>
-
     <div id="regFields">
       <p class="text-xs text-soft mb-4">Только ник, юзернейм и пароль. Мы не спрашиваем имя, телефон и почту.</p>
       <div class="flex items-center gap-3 mb-4">
@@ -169,7 +240,6 @@
         class="w-full bg-ink border border-line rounded-xl px-3.5 py-3 text-sm mb-3 outline-none focus:border-accent" />
       <button id="btnRandomIdentity" class="w-full mb-2 text-xs text-soft hover:text-white">Придумать ник и юзернейм за меня</button>
     </div>
-
     <div id="loginFields" class="hidden">
       <p class="text-xs text-soft mb-4">Войди под своим юзернеймом и паролем — с любого устройства.</p>
       <input id="inpLoginUsername" maxlength="32" autocomplete="off" placeholder="Юзернейм"
@@ -177,12 +247,12 @@
       <input id="inpLoginPassword" type="password" maxlength="64" placeholder="Пароль"
         class="w-full bg-ink border border-line rounded-xl px-3.5 py-3 text-sm mb-3 outline-none focus:border-accent" />
     </div>
-
     <div id="authErr" class="hidden text-xs text-rose-400 mb-2"></div>
     <button id="btnAuth" class="w-full bg-accent hover:bg-accentDim transition py-3 rounded-xl font-semibold disabled:opacity-50">Создать анонимный аккаунт</button>
   </div>
 </div>
 
+<!-- Новый пост -->
 <div id="postModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
   <div class="max-w-lg mx-auto mt-6 bg-card border border-line rounded-2xl p-5 fade-in">
     <div class="flex items-center justify-between mb-4">
@@ -206,32 +276,13 @@
     </div>
     <input id="postTags" placeholder="Теги через пробел: #9класс #событие #юмор"
       class="w-full mt-3 bg-ink border border-line rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-accent" />
+    <div class="flex gap-2 mt-3">
+      <button id="visPublicBtn" class="flex-1 text-sm py-2.5 rounded-xl border bg-accent border-accent text-white">🌐 Видят все</button>
+      <button id="visFriendsBtn" class="flex-1 text-sm py-2.5 rounded-xl border border-line text-soft">👥 Только друзья</button>
+    </div>
     <div id="postErr" class="hidden text-xs text-rose-400 mt-2"></div>
     <button id="btnPublish" class="w-full mt-4 bg-accent hover:bg-accentDim transition py-3 rounded-xl font-semibold disabled:opacity-50">Опубликовать</button>
-    <p class="text-[11px] text-soft mt-2 text-center">Пост публикуется сразу и виден всем. Модераторы проверяют ленту и жалобы постфактум.</p>
-  </div>
-</div>
-
-<div id="profileModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
-  <div class="max-w-sm mx-auto mt-12 bg-card border border-line rounded-2xl p-5 fade-in">
-    <div class="flex items-center justify-between mb-2">
-      <div class="w-6"></div>
-      <button data-close="profileModal" class="text-soft hover:text-white text-2xl leading-none">&times;</button>
-    </div>
-    <div class="text-center">
-      <img id="profAvatar" class="w-20 h-20 rounded-full mx-auto ring-2 ring-accent bg-ink" alt="" />
-      <div id="profNick" class="mt-3 font-display font-bold text-lg"></div>
-      <div id="profUsername" class="text-xs text-soft">@username</div>
-      <div class="grid grid-cols-2 gap-2 mt-4 text-sm">
-        <div class="bg-ink rounded-xl py-3"><div id="statPosts" class="font-bold text-lg">0</div><div class="text-soft text-xs">постов</div></div>
-        <div class="bg-ink rounded-xl py-3"><div id="statLikes" class="font-bold text-lg">0</div><div class="text-soft text-xs">лайков собрано</div></div>
-      </div>
-    </div>
-    <div class="mt-4">
-      <div class="text-xs font-semibold text-soft uppercase tracking-wide mb-2">Мои посты</div>
-      <div id="profPosts" class="space-y-2 max-h-72 overflow-y-auto"></div>
-    </div>
-    <button id="btnLogout" class="w-full mt-4 border border-line hover:border-rose-500 hover:text-rose-400 transition py-2.5 rounded-xl text-sm">Выйти</button>
+    <p class="text-[11px] text-soft mt-2 text-center">Пост публикуется сразу. Модераторы проверяют ленту и жалобы постфактум.</p>
   </div>
 </div>
 
@@ -248,39 +299,7 @@
   </div>
 </div>
 
-<!-- Личные сообщения -->
-<div id="dmModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
-  <div class="max-w-lg mx-auto mt-6 bg-card border border-line rounded-2xl p-5 fade-in h-[80vh] flex flex-col">
-    <div id="dmListView" class="flex flex-col h-full">
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="font-display text-lg font-bold">Сообщения</h2>
-        <button data-close="dmModal" class="text-soft hover:text-white text-2xl leading-none">&times;</button>
-      </div>
-      <input id="dmSearch" placeholder="Найти по юзернейму…" autocomplete="off"
-        class="w-full bg-ink border border-line rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-accent mb-3" />
-      <div id="dmList" class="flex-1 overflow-y-auto space-y-1"></div>
-    </div>
-    <div id="dmThreadView" class="hidden flex-col h-full">
-      <div class="flex items-center gap-2 mb-3">
-        <button id="dmBack" class="text-soft hover:text-white text-xl px-1">←</button>
-        <img id="dmThreadAvatar" class="w-8 h-8 rounded-full bg-ink" alt="" />
-        <div class="min-w-0">
-          <div id="dmThreadNick" class="text-sm font-semibold truncate"></div>
-          <div id="dmThreadUsername" class="text-[11px] text-soft truncate"></div>
-        </div>
-        <button data-close="dmModal" class="ml-auto text-soft hover:text-white text-2xl leading-none">&times;</button>
-      </div>
-      <div id="dmMessages" class="flex-1 overflow-y-auto space-y-2 pr-1"></div>
-      <div class="flex gap-2 mt-3">
-        <input id="dmInput" placeholder="Сообщение…" maxlength="1000"
-          class="flex-1 bg-ink border border-line rounded-xl px-3 py-2.5 text-sm outline-none focus:border-accent" />
-        <button id="dmSend" class="bg-accent hover:bg-accentDim transition px-4 rounded-xl text-sm font-semibold">→</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Админ-панель: жалобы + баны -->
+<!-- Админ-панель -->
 <div id="adminModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
   <div class="max-w-lg mx-auto mt-6 bg-card border border-line rounded-2xl p-5 fade-in">
     <div class="flex items-center justify-between mb-3">
@@ -349,16 +368,16 @@ function looksLikePersonalData(text) {
 function openModal(id){ $(id).classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
 function closeModal(id){ $(id).classList.add('hidden'); document.body.style.overflow = ''; }
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => closeModal(b.dataset.close));
-document.querySelectorAll('#authModal,#postModal,#profileModal,#reportModal,#adminModal,#dmModal').forEach(m => {
+document.querySelectorAll('#authModal,#postModal,#reportModal,#adminModal').forEach(m => {
   m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); });
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') ['postModal','profileModal','reportModal','adminModal','dmModal'].forEach(closeModal);
+  if (e.key === 'Escape') ['postModal','reportModal','adminModal'].forEach(closeModal);
 });
 function showErr(el, msg){ el.textContent = msg; el.classList.remove('hidden'); }
 function hideErr(el){ el.classList.add('hidden'); }
 
-/* ============ 3. АВТОРИЗАЦИЯ: юзернейм + пароль ============ */
+/* ============ 3. АВТОРИЗАЦИЯ ============ */
 let me = null;
 let authMode = 'reg';
 
@@ -451,40 +470,85 @@ function requireAuth(){
   return false;
 }
 
-/* ============ 4. НАВИГАЦИЯ (сайдбар + нижняя панель) ============ */
-$$('.nav-newpost').forEach(b => b.onclick = () => { if (requireAuth()) openModal('postModal'); });
-$$('.nav-dm').forEach(b => b.onclick = () => { if (!requireAuth()) return; openModal('dmModal'); showDMList(); });
-$$('.nav-profile').forEach(b => b.onclick = openProfilePanel);
-$$('.nav-admin').forEach(b => b.onclick = () => { openModal('adminModal'); showAdminTab('reports'); });
-$$('.nav-home').forEach(b => b.onclick = () => { activeTag = null; renderTagBar(); renderFeed(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+/* ============ 4. НАВИГАЦИЯ ПО РАЗДЕЛАМ (как вкладки в ВК, не поверх ленты) ============ */
+const VIEW_IDS = { feed: 'viewFeed', friends: 'viewFriends', messages: 'viewMessages', profile: 'viewProfile' };
+let currentView = 'feed';
 
-/* ============ 5. ПРОФИЛЬ (свои посты) ============ */
-async function openProfilePanel(){
-  if (!requireAuth()) return;
+function showView(view){
+  if (view !== 'feed' && !requireAuth()) return;
+  currentView = view;
+  Object.entries(VIEW_IDS).forEach(([v, id]) => $(id).classList.toggle('hidden', v !== view));
+  $$('.nav-home').forEach(b => b.classList.toggle('active', view === 'feed'));
+  $$('.nav-friends').forEach(b => b.classList.toggle('active', view === 'friends'));
+  $$('.nav-dm').forEach(b => b.classList.toggle('active', view === 'messages'));
+  $$('.nav-profile').forEach(b => b.classList.toggle('active', view === 'profile'));
+  window.scrollTo({ top: 0 });
+  if (view === 'friends') loadFriendsView();
+  if (view === 'messages') showDMList();
+  if (view === 'profile') loadProfileView();
+}
+$$('.nav-home').forEach(b => b.onclick = () => showView('feed'));
+$$('.nav-friends').forEach(b => b.onclick = () => showView('friends'));
+$$('.nav-dm').forEach(b => b.onclick = () => showView('messages'));
+$$('.nav-profile').forEach(b => b.onclick = () => showView('profile'));
+$$('.nav-admin').forEach(b => b.onclick = () => { openModal('adminModal'); showAdminTab('reports'); });
+$$('.nav-newpost').forEach(b => b.onclick = () => { if (requireAuth()) { resetPostVisibility(); openModal('postModal'); } });
+
+/* ============ 5. ПРОФИЛЬ (страница, управление видимостью постов) ============ */
+async function loadProfileView(){
   $('profAvatar').src = avatarUrl(me.avatar_seed);
   $('profNick').textContent = me.nickname;
   $('profUsername').textContent = '@' + me.username;
-  openModal('profileModal');
-  const { data: posts } = await db.from('posts').select('id,content,image_url,created_at,likes(id)').eq('author_id', me.id).order('created_at', { ascending: false });
+  const { data: posts } = await db.from('posts').select('id,content,image_url,created_at,visibility,likes(id)').eq('author_id', me.id).order('created_at', { ascending: false });
   $('statPosts').textContent = posts ? posts.length : 0;
   $('statLikes').textContent = posts ? posts.reduce((n, p) => n + ((p.likes && p.likes.length) || 0), 0) : 0;
   const box = $('profPosts');
   if (!posts || !posts.length) { box.innerHTML = '<div class="text-soft text-xs text-center py-4">Постов пока нет.</div>'; return; }
-  box.innerHTML = posts.map(p => '' +
-    '<div class="bg-ink border border-line rounded-xl p-2.5 flex gap-2.5 items-center">' +
-      (safeImg(p.image_url) ? '<img src="' + esc(p.image_url) + '" class="w-12 h-12 object-cover rounded-lg shrink-0" />' : '<div class="w-12 h-12 rounded-lg bg-card grid place-items-center text-soft text-xs shrink-0">📝</div>') +
+  box.innerHTML = posts.map(profilePostRowHTML).join('');
+  box.querySelectorAll('[data-pid]').forEach(row => {
+    const pid = row.dataset.pid;
+    row.querySelectorAll('.vis-btn').forEach(b => b.onclick = async () => {
+      await db.from('posts').update({ visibility: b.dataset.vis }).eq('id', pid);
+      loadProfileView();
+    });
+    row.querySelector('.del-own-btn').onclick = async () => {
+      if (!confirm('Удалить пост?')) return;
+      await db.from('posts').delete().eq('id', pid);
+      loadProfileView(); loadFeed();
+    };
+  });
+}
+function profilePostRowHTML(p){
+  const vPublic = p.visibility !== 'friends';
+  return '<div class="bg-card border border-line rounded-xl p-2.5" data-pid="' + esc(p.id) + '">' +
+    '<div class="flex gap-2.5 items-center">' +
+      (safeImg(p.image_url) ? '<img src="' + esc(p.image_url) + '" class="w-12 h-12 object-cover rounded-lg shrink-0" />' : '<div class="w-12 h-12 rounded-lg bg-ink grid place-items-center text-soft text-xs shrink-0">📝</div>') +
       '<div class="min-w-0 flex-1"><div class="text-sm truncate">' + esc(p.content || '(без текста)') + '</div><div class="text-[11px] text-soft">' + timeAgo(p.created_at) + ' · ' + ((p.likes||[]).length) + ' ♥</div></div>' +
-    '</div>').join('');
+    '</div>' +
+    '<div class="flex gap-2 mt-2">' +
+      '<button class="vis-btn flex-1 text-xs py-1.5 rounded-lg border ' + (vPublic ? 'bg-accent border-accent text-white' : 'border-line text-soft') + '" data-vis="public">🌐 Все</button>' +
+      '<button class="vis-btn flex-1 text-xs py-1.5 rounded-lg border ' + (!vPublic ? 'bg-accent border-accent text-white' : 'border-line text-soft') + '" data-vis="friends">👥 Друзья</button>' +
+      '<button class="del-own-btn text-xs px-2 py-1.5 text-soft hover:text-rose-400">Удалить</button>' +
+    '</div>' +
+  '</div>';
 }
 $('btnLogout').onclick = async () => {
   await db.auth.signOut();
-  me = null; renderHeaderUser(); closeModal('profileModal'); loadFeed();
+  me = null; renderHeaderUser(); showView('feed'); loadFeed();
 };
 
-/* ============ 6. СОЗДАНИЕ ПОСТА ============ */
+/* ============ 6. СОЗДАНИЕ ПОСТА (с выбором видимости) ============ */
 let pickedFile = null, pickedUrl = '';
-$('btnUrlToggle').onclick = () => $('postUrl').classList.toggle('hidden');
+let postVisibility = 'public';
+function resetPostVisibility(){ postVisibility = 'public'; updateVisButtons(); }
+function updateVisButtons(){
+  $('visPublicBtn').className = 'flex-1 text-sm py-2.5 rounded-xl border ' + (postVisibility === 'public' ? 'bg-accent border-accent text-white' : 'border-line text-soft');
+  $('visFriendsBtn').className = 'flex-1 text-sm py-2.5 rounded-xl border ' + (postVisibility === 'friends' ? 'bg-accent border-accent text-white' : 'border-line text-soft');
+}
+$('visPublicBtn').onclick = () => { postVisibility = 'public'; updateVisButtons(); };
+$('visFriendsBtn').onclick = () => { postVisibility = 'friends'; updateVisButtons(); };
 
+$('btnUrlToggle').onclick = () => $('postUrl').classList.toggle('hidden');
 $('postFile').onchange = (e) => {
   const f = e.target.files[0];
   if (!f) return;
@@ -529,7 +593,7 @@ $('btnPublish').onclick = async () => {
       if (up.error) throw up.error;
       imageUrl = db.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
     }
-    const { error } = await db.from('posts').insert({ author_id: me.id, content: text, image_url: imageUrl, tags });
+    const { error } = await db.from('posts').insert({ author_id: me.id, content: text, image_url: imageUrl, tags, visibility: postVisibility });
     if (error) throw error;
     $('postText').value = ''; $('postTags').value = '';
     $('clearImg').click();
@@ -566,7 +630,7 @@ $('btnSendReport').onclick = async () => {
 let POSTS = [];
 let activeTag = null;
 let loaded = 0;
-const SELECT = 'id,content,image_url,tags,created_at,author_id,profiles(nickname,username,avatar_seed),likes(user_id),comments(id)';
+const SELECT = 'id,content,image_url,tags,visibility,created_at,author_id,profiles(nickname,username,avatar_seed),likes(user_id),comments(id)';
 
 async function loadFeed(append){
   if (!db) return;
@@ -625,7 +689,7 @@ function cardHTML(p){
       '<img src="' + avatarUrl(author.avatar_seed) + '" class="w-10 h-10 rounded-full bg-ink ring-1 ring-line" alt="" />' +
       '<div class="min-w-0">' +
         '<div class="text-sm font-semibold truncate">' + esc(author.nickname) + '</div>' +
-        '<div class="text-[11px] text-soft">' + timeAgo(p.created_at) + ' · @' + esc(author.username) + '</div>' +
+        '<div class="text-[11px] text-soft">' + timeAgo(p.created_at) + ' · @' + esc(author.username) + (p.visibility === 'friends' ? ' · 👥 друзья' : '') + '</div>' +
       '</div>' +
       (!mine ? '<button class="dm-btn text-soft hover:text-accent text-sm px-2 py-1" data-uid="' + esc(p.author_id) + '" data-unick="' + esc(author.nickname) + '" data-uuser="' + esc(author.username) + '" data-uavatar="' + esc(author.avatar_seed) + '" title="Написать">✉</button>' : '') +
       '<button class="report-btn text-soft hover:text-rose-400 text-xs px-2 py-1" title="Пожаловаться">⚑</button>' +
@@ -686,8 +750,8 @@ function bindCards(){
     const dmBtn = card.querySelector('.dm-btn');
     if (dmBtn) dmBtn.onclick = () => {
       if (!requireAuth()) return;
+      showView('messages');
       openDMThread({ id: dmBtn.dataset.uid, nickname: dmBtn.dataset.unick, username: dmBtn.dataset.uuser, avatar_seed: dmBtn.dataset.uavatar });
-      openModal('dmModal');
     };
 
     const delBtn = card.querySelector('.del-btn');
@@ -752,9 +816,90 @@ async function loadComments(postId, card){
   });
 }
 
-/* ============ 9. ЛИЧНЫЕ СООБЩЕНИЯ ============ */
-let dmCurrent = null;
+/* ============ 9. ДРУЗЬЯ ============ */
+let friendshipMap = new Map();
 
+async function loadFriendshipMap(){
+  const { data } = await db.from('friendships').select('*').or('requester_id.eq.' + me.id + ',addressee_id.eq.' + me.id);
+  friendshipMap = new Map();
+  (data || []).forEach(f => {
+    const other = f.requester_id === me.id ? f.addressee_id : f.requester_id;
+    friendshipMap.set(other, f);
+  });
+}
+function friendActionHTML(u){
+  const rel = friendshipMap.get(u.id);
+  if (!rel) return '<button class="friend-add text-xs px-3 py-1.5 rounded-lg bg-accent text-white shrink-0" data-uid="' + esc(u.id) + '">Добавить</button>';
+  if (rel.status === 'accepted') return '<button class="friend-remove text-xs px-3 py-1.5 rounded-lg border border-line text-soft shrink-0" data-fid="' + esc(rel.id) + '">Удалить из друзей</button>';
+  if (rel.requester_id === me.id) return '<button class="friend-cancel text-xs px-3 py-1.5 rounded-lg border border-line text-soft shrink-0" data-fid="' + esc(rel.id) + '">Заявка отправлена</button>';
+  return '<button class="friend-accept text-xs px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shrink-0" data-fid="' + esc(rel.id) + '">Принять</button>';
+}
+function friendRowHTML(u){
+  return '<div class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-card">' +
+    '<img src="' + avatarUrl(u.avatar_seed) + '" class="w-10 h-10 rounded-full bg-ink ring-1 ring-line" />' +
+    '<div class="min-w-0 flex-1"><div class="text-sm font-semibold truncate">' + esc(u.nickname) + '</div><div class="text-[11px] text-soft truncate">@' + esc(u.username) + '</div></div>' +
+    friendActionHTML(u) +
+  '</div>';
+}
+function bindFriendButtons(box){
+  box.querySelectorAll('.friend-add').forEach(b => b.onclick = async () => {
+    const { error } = await db.from('friendships').insert({ requester_id: me.id, addressee_id: b.dataset.uid, status: 'pending' });
+    if (error) return alert('Не удалось отправить заявку: ' + error.message);
+    loadFriendsView();
+    const q = $('friendSearch').value.trim().toLowerCase();
+    if (q) searchFriendCandidates(q);
+  });
+  box.querySelectorAll('.friend-accept').forEach(b => b.onclick = async () => {
+    await db.from('friendships').update({ status: 'accepted' }).eq('id', b.dataset.fid);
+    loadFriendsView();
+  });
+  box.querySelectorAll('.friend-cancel,.friend-remove').forEach(b => b.onclick = async () => {
+    await db.from('friendships').delete().eq('id', b.dataset.fid);
+    loadFriendsView();
+  });
+}
+
+let friendSearchTimer = null;
+$('friendSearch').oninput = () => {
+  clearTimeout(friendSearchTimer);
+  const q = $('friendSearch').value.trim().toLowerCase();
+  friendSearchTimer = setTimeout(() => { if (q) searchFriendCandidates(q); else $('friendSearchResults').innerHTML = ''; }, 250);
+};
+async function searchFriendCandidates(q){
+  await loadFriendshipMap();
+  const box = $('friendSearchResults');
+  box.innerHTML = '<div class="text-soft text-xs p-2">Поиск…</div>';
+  const { data, error } = await db.from('profiles').select('id,nickname,username,avatar_seed').ilike('username', '%' + q + '%').neq('id', me.id).limit(20);
+  if (error) { box.innerHTML = '<div class="text-rose-400 text-xs p-2">' + esc(error.message) + '</div>'; return; }
+  if (!data.length) { box.innerHTML = '<div class="text-soft text-xs p-2">Никого не нашли.</div>'; return; }
+  box.innerHTML = data.map(friendRowHTML).join('');
+  bindFriendButtons(box);
+}
+
+async function loadFriendsView(){
+  await loadFriendshipMap();
+  $('friendSearch').value = '';
+  $('friendSearchResults').innerHTML = '';
+
+  const incoming = Array.from(friendshipMap.values()).filter(f => f.status === 'pending' && f.addressee_id === me.id);
+  const reqBox = $('friendRequestsBox');
+  if (incoming.length) {
+    const ids = incoming.map(f => f.requester_id);
+    const { data: users } = await db.from('profiles').select('id,nickname,username,avatar_seed').in('id', ids);
+    reqBox.innerHTML = '<div class="text-xs font-semibold text-soft uppercase tracking-wide mb-2">Заявки в друзья</div>' + (users || []).map(friendRowHTML).join('');
+    bindFriendButtons(reqBox);
+  } else reqBox.innerHTML = '';
+
+  const acceptedIds = Array.from(friendshipMap.entries()).filter(([, f]) => f.status === 'accepted').map(([id]) => id);
+  const listBox = $('friendsListBox');
+  if (!acceptedIds.length) { listBox.innerHTML = '<div class="text-soft text-xs">Пока нет друзей. Найди кого-нибудь по юзернейму выше.</div>'; return; }
+  const { data: users2 } = await db.from('profiles').select('id,nickname,username,avatar_seed').in('id', acceptedIds);
+  listBox.innerHTML = (users2 || []).map(friendRowHTML).join('');
+  bindFriendButtons(listBox);
+}
+
+/* ============ 10. ЛИЧНЫЕ СООБЩЕНИЯ (раздел, не окно) ============ */
+let dmCurrent = null;
 $('dmBack').onclick = () => showDMList();
 
 function showDMList(){
@@ -764,24 +909,21 @@ function showDMList(){
   $('dmSearch').value = '';
   loadConversations();
 }
-
 let dmSearchTimer = null;
 $('dmSearch').oninput = () => {
   clearTimeout(dmSearchTimer);
   const q = $('dmSearch').value.trim().toLowerCase();
   dmSearchTimer = setTimeout(() => q ? searchUsers(q) : loadConversations(), 250);
 };
-
 async function searchUsers(q){
   const box = $('dmList');
   box.innerHTML = '<div class="text-soft text-xs p-2">Поиск…</div>';
   const { data, error } = await db.from('profiles').select('id,nickname,username,avatar_seed').ilike('username', '%' + q + '%').neq('id', me.id).limit(20);
   if (error) { box.innerHTML = '<div class="text-rose-400 text-xs p-2">' + esc(error.message) + '</div>'; return; }
   if (!data.length) { box.innerHTML = '<div class="text-soft text-xs p-2">Никого не нашли.</div>'; return; }
-  box.innerHTML = data.map(u => userRowHTML(u, '')).join('');
+  box.innerHTML = data.map(u => dmRowHTML(u, '')).join('');
   bindDMRows(box, data);
 }
-
 async function loadConversations(){
   const box = $('dmList');
   box.innerHTML = '<div class="text-soft text-xs p-2">Загрузка…</div>';
@@ -799,12 +941,11 @@ async function loadConversations(){
   });
   const convos = Array.from(byUser.values());
   if (!convos.length) { box.innerHTML = '<div class="text-soft text-xs p-2">Пока нет переписок. Найди кого-нибудь по юзернейму выше.</div>'; return; }
-  box.innerHTML = convos.map(c => userRowHTML(c.user, c.last.content)).join('');
+  box.innerHTML = convos.map(c => dmRowHTML(c.user, c.last.content)).join('');
   bindDMRows(box, convos.map(c => c.user));
 }
-
-function userRowHTML(u, preview){
-  return '<div class="dm-row flex items-center gap-3 p-2.5 rounded-xl hover:bg-ink cursor-pointer" data-uid="' + esc(u.id) + '">' +
+function dmRowHTML(u, preview){
+  return '<div class="dm-row flex items-center gap-3 p-2.5 rounded-xl hover:bg-card cursor-pointer" data-uid="' + esc(u.id) + '">' +
     '<img src="' + avatarUrl(u.avatar_seed) + '" class="w-10 h-10 rounded-full bg-ink ring-1 ring-line" />' +
     '<div class="min-w-0 flex-1">' +
       '<div class="text-sm font-semibold truncate">' + esc(u.nickname) + '</div>' +
@@ -818,7 +959,6 @@ function bindDMRows(box, users){
     if (u) row.onclick = () => openDMThread(u);
   });
 }
-
 async function openDMThread(user){
   dmCurrent = user;
   $('dmListView').classList.add('hidden'); $('dmListView').classList.remove('flex');
@@ -830,7 +970,6 @@ async function openDMThread(user){
   await db.from('messages').update({ read: true }).eq('sender_id', user.id).eq('receiver_id', me.id).eq('read', false);
   refreshDMBadge();
 }
-
 async function loadThreadMessages(){
   const box = $('dmMessages');
   box.innerHTML = '<div class="text-soft text-xs">Загрузка…</div>';
@@ -852,7 +991,6 @@ function renderMessages(list){
   }).join('');
   box.scrollTop = box.scrollHeight;
 }
-
 async function sendDM(){
   const text = $('dmInput').value.trim();
   if (!text || !dmCurrent) return;
@@ -863,7 +1001,6 @@ async function sendDM(){
 }
 $('dmSend').onclick = sendDM;
 $('dmInput').addEventListener('keydown', e => { if (e.key === 'Enter') sendDM(); });
-
 async function refreshDMBadge(){
   if (!me) return;
   const { count } = await db.from('messages').select('id', { count: 'exact', head: true }).eq('receiver_id', me.id).eq('read', false);
@@ -871,10 +1008,9 @@ async function refreshDMBadge(){
   $$('.dm-badge').forEach(b => { b.textContent = total; b.classList.toggle('hidden', total === 0); });
 }
 
-/* ============ 10. АДМИН-ПАНЕЛЬ ============ */
+/* ============ 11. АДМИН-ПАНЕЛЬ ============ */
 $('admTabReports').onclick = () => showAdminTab('reports');
 $('admTabBan').onclick = () => showAdminTab('ban');
-
 function showAdminTab(tab){
   const map = { reports: 'admReports', ban: 'admBan' };
   Object.values(map).forEach(id => $(id).classList.add('hidden'));
@@ -885,14 +1021,12 @@ function showAdminTab(tab){
   $('admTabBan').className = tab === 'ban' ? on : off;
   if (tab === 'reports') loadReports();
 }
-
 async function refreshAdminBadge(){
   if (!me || !me.is_admin) return;
   const { count } = await db.from('reports').select('id', { count: 'exact', head: true }).eq('resolved', false);
   const total = count || 0;
   $$('.admin-badge').forEach(b => { b.textContent = total; b.classList.toggle('hidden', total === 0); });
 }
-
 async function loadReports(){
   const box = $('admReports');
   box.innerHTML = '<div class="text-soft text-xs">Загрузка…</div>';
@@ -920,7 +1054,6 @@ async function loadReports(){
     };
   });
 }
-
 $('btnBanUser').onclick = () => setBan(true);
 $('btnUnbanUser').onclick = () => setBan(false);
 async function setBan(banned){
@@ -930,7 +1063,7 @@ async function setBan(banned){
   $('banMsg').textContent = error ? ('Ошибка: ' + error.message) : (banned ? 'Пользователь заблокирован.' : 'Пользователь разблокирован.');
 }
 
-/* ============ 11. REALTIME ============ */
+/* ============ 12. REALTIME ============ */
 if (db) {
   db.channel('feed-live')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, () => loadFeed())
@@ -942,10 +1075,11 @@ if (db) {
       if (dmCurrent && (m.sender_id === dmCurrent.id || m.receiver_id === dmCurrent.id)) loadThreadMessages();
       refreshDMBadge();
     })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, () => { if (currentView === 'friends') loadFriendsView(); })
     .subscribe();
 }
 
-/* ============ 12. СТАРТ ============ */
+/* ============ 13. СТАРТ ============ */
 async function start(){
   if (!configured) {
     $('banner').textContent = 'Вставь SUPABASE_URL и SUPABASE_ANON_KEY в начало скрипта — без них лента не загрузится.';
@@ -956,9 +1090,10 @@ async function start(){
   const { data: { session } } = await db.auth.getSession();
   if (session) me = await loadMyProfile(session.user);
   renderHeaderUser();
+  showView('feed');
   loadFeed();
   if (me) { refreshAdminBadge(); refreshDMBadge(); }
-  else { requireAuth(); } // сразу предлагаем зарегистрироваться или войти
+  else { requireAuth(); }
 }
 start();
 </script>
