@@ -46,9 +46,6 @@
   /* нижняя панель на телефоне: fixed + компенсация "прыжков" при скролле (адресная строка мобильного браузера) */
   .bottom-tabbar{
     position:fixed; left:0; right:0; bottom:0; z-index:40;
-    transform:translateZ(0);
-    -webkit-transform:translate3d(0,0,0);
-    will-change:transform;
   }
   .tab-btn{color:#8ea0c4}
   .tab-btn.active{color:#e8ecf5}
@@ -120,7 +117,7 @@
       </div>
     </header>
 
-    <main class="max-w-2xl mx-auto md:mx-0 md:max-w-none px-3 pb-24 md:pb-10 pt-4">
+    <main class="max-w-2xl mx-auto md:mx-0 md:max-w-none px-3 pb-32 md:pb-10 pt-4">
       <div id="banner" class="hidden mb-4 rounded-xl border border-gold/40 bg-gold/10 text-gold text-sm p-3"></div>
 
       <!-- ===== ЛЕНТА ===== -->
@@ -1078,6 +1075,25 @@ if (db) {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, () => { if (currentView === 'friends') loadFriendsView(); })
     .subscribe();
 }
+
+/* ============ 12б. ФИКС "ПРЫГАЮЩЕЙ" НИЖНЕЙ ПАНЕЛИ НА МОБИЛЬНЫХ ============ */
+// Мобильные браузеры (особенно Chrome/Android) прячут/показывают адресную строку
+// при скролле, и position:fixed привязан к "layout viewport", который при этом
+// меняет размер — визуально это выглядит как "прыжок" панели. Компенсируем разницу
+// между полной высотой окна и текущей видимой (visualViewport) через transform.
+(function pinBottomNav(){
+  const nav = document.querySelector('.bottom-tabbar');
+  if (!nav || !window.visualViewport) return;
+  const vv = window.visualViewport;
+  function update(){
+    const offset = window.innerHeight - (vv.height + vv.offsetTop);
+    nav.style.transform = offset > 0 ? 'translateY(-' + offset + 'px)' : '';
+  }
+  vv.addEventListener('resize', update);
+  vv.addEventListener('scroll', update);
+  window.addEventListener('orientationchange', () => setTimeout(update, 200));
+  update();
+})();
 
 /* ============ 13. СТАРТ ============ */
 async function start(){
