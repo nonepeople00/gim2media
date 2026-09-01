@@ -45,7 +45,8 @@
   .side-link svg{flex-shrink:0}
   /* нижняя панель на телефоне: fixed + компенсация "прыжков" при скролле (адресная строка мобильного браузера) */
   .bottom-tabbar{
-    position:fixed; left:0; right:0; bottom:0; z-index:40;
+    position:fixed; left:0; right:0; bottom:0; z-index:45;
+    background:#131b2e; /* сплошной непрозрачный фон — никогда не просвечивает контент под ним */
   }
   .tab-btn{color:#8ea0c4}
   .tab-btn.active{color:#e8ecf5}
@@ -187,7 +188,7 @@
 </div>
 
 <!-- ==== MOBILE BOTTOM TAB BAR (VK-style) ==== -->
-<nav class="bottom-tabbar md:hidden bg-card/98 border-t border-line flex items-stretch h-16 pb-[env(safe-area-inset-bottom)]">
+<nav class="bottom-tabbar md:hidden border-t border-line flex items-stretch h-16 pb-[env(safe-area-inset-bottom)]">
   <button class="nav-home tab-btn flex-1 flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
     Лента
@@ -321,7 +322,7 @@
 
 <script>
 /* ============ 1. КОНФИГ ============ */
-const SUPABASE_URL      = "https://xjnaehhhrvcxeuldlcta.supabase.co";
+const SUPABASE_URL      = "https://xjnaehhhrvcxeuldlcta.supabase.co/rest/v1/";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhqbmFlaGhocnZjeGV1bGRsY3RhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDIzMjQsImV4cCI6MjEwMjE3ODMyNH0.yqBSbE57IBrW2xhS_exbiKxDjYEKoaTUb8rj79Lh71U";
 const BUCKET = "post-images";
 const PAGE_SIZE = 30;
@@ -1075,25 +1076,6 @@ if (db) {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, () => { if (currentView === 'friends') loadFriendsView(); })
     .subscribe();
 }
-
-/* ============ 12б. ФИКС "ПРЫГАЮЩЕЙ" НИЖНЕЙ ПАНЕЛИ НА МОБИЛЬНЫХ ============ */
-// Мобильные браузеры (особенно Chrome/Android) прячут/показывают адресную строку
-// при скролле, и position:fixed привязан к "layout viewport", который при этом
-// меняет размер — визуально это выглядит как "прыжок" панели. Компенсируем разницу
-// между полной высотой окна и текущей видимой (visualViewport) через transform.
-(function pinBottomNav(){
-  const nav = document.querySelector('.bottom-tabbar');
-  if (!nav || !window.visualViewport) return;
-  const vv = window.visualViewport;
-  function update(){
-    const offset = window.innerHeight - (vv.height + vv.offsetTop);
-    nav.style.transform = offset > 0 ? 'translateY(-' + offset + 'px)' : '';
-  }
-  vv.addEventListener('resize', update);
-  vv.addEventListener('scroll', update);
-  window.addEventListener('orientationchange', () => setTimeout(update, 200));
-  update();
-})();
 
 /* ============ 13. СТАРТ ============ */
 async function start(){
