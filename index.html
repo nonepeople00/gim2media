@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Гимназия №2 | Анонимная лента</title>
-<meta name="description" content="Анонимная социальная сеть учащихся МАОУ г. Иркутска Гимназия №2" />
+<title>Гимназия №2 | Лента</title>
+<meta name="description" content="Социальная сеть учащихся МАОУ г. Иркутска Гимназия №2" />
 <meta name="theme-color" content="#0b0f1a" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -52,11 +52,11 @@
   .tab-btn.active{color:#e8ecf5}
 </style>
 </head>
-
+ 
 <body class="bg-ink text-slate-100 antialiased min-h-screen font-body">
-
+ 
 <div class="md:max-w-5xl md:mx-auto md:flex md:items-start md:gap-6">
-
+ 
   <!-- ==== DESKTOP SIDEBAR (VK-style left nav) ==== -->
   <aside class="hidden md:flex md:flex-col md:w-64 md:shrink-0 md:sticky md:top-0 md:h-screen md:py-5 md:pl-2 gap-1">
     <div class="flex items-center gap-3 px-2 mb-4">
@@ -65,10 +65,10 @@
       </div>
       <div class="min-w-0 leading-tight">
         <div class="font-display font-extrabold text-[15px] tracking-tight truncate">Гимназия №2</div>
-        <div class="text-[11px] text-soft truncate tracking-wide uppercase">Анонимная лента</div>
+        <div class="text-[11px] text-soft truncate tracking-wide uppercase">Лента гимназии</div>
       </div>
     </div>
-
+ 
     <button class="nav-home side-link">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
       Лента
@@ -92,13 +92,13 @@
       Модерация
       <span class="admin-badge hidden bg-gold text-ink rounded-full text-[10px] px-1.5 ml-auto">0</span>
     </button>
-
+ 
     <button class="nav-newpost mt-3 bg-accent hover:bg-accentDim transition text-white text-sm font-semibold px-3.5 py-2.5 rounded-xl flex items-center justify-center gap-1.5">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
       Создать пост
     </button>
   </aside>
-
+ 
   <div class="flex-1 min-w-0">
     <!-- ==== MOBILE TOP HEADER ==== -->
     <header class="md:hidden sticky top-0 z-40 backdrop-blur bg-ink/90 border-b border-line hero-wreath">
@@ -109,7 +109,7 @@
           </div>
           <div class="min-w-0 leading-tight">
             <div class="font-display font-extrabold text-[15px] tracking-tight truncate">Гимназия №2</div>
-            <div class="text-[11px] text-soft truncate tracking-wide uppercase">Анонимная лента</div>
+            <div class="text-[11px] text-soft truncate tracking-wide uppercase">Лента гимназии</div>
           </div>
         </div>
         <button class="nav-admin hidden ml-auto items-center gap-1 bg-gold/15 text-gold border border-gold/40 text-xs font-semibold px-2.5 py-1.5 rounded-xl relative">
@@ -117,18 +117,22 @@
         </button>
       </div>
     </header>
-
+ 
     <main class="max-w-2xl mx-auto md:mx-0 md:max-w-none px-3 pb-32 md:pb-10 pt-4">
       <div id="banner" class="hidden mb-4 rounded-xl border border-gold/40 bg-gold/10 text-gold text-sm p-3"></div>
-
+ 
       <!-- ===== ЛЕНТА ===== -->
       <section id="viewFeed">
+        <div class="flex gap-2 mb-3">
+          <button id="sortNewBtn" class="flex-1 text-sm py-2 rounded-xl border bg-accent border-accent text-white">🕐 Новые</button>
+          <button id="sortTopBtn" class="flex-1 text-sm py-2 rounded-xl border border-line text-soft">🔥 Популярное</button>
+        </div>
         <div id="tagBar" class="mb-3 flex gap-2 overflow-x-auto no-scrollbar"></div>
         <div id="feed" class="space-y-4"></div>
         <div id="feedState" class="text-center text-soft py-10 text-sm">Загрузка ленты…</div>
         <button id="btnMore" class="hidden w-full mt-4 border border-line hover:border-accent transition py-3 rounded-xl text-sm text-soft">Показать ещё</button>
       </section>
-
+ 
       <!-- ===== ДРУЗЬЯ ===== -->
       <section id="viewFriends" class="hidden">
         <h2 class="font-display text-xl font-bold mb-3">Друзья</h2>
@@ -139,7 +143,7 @@
         <div class="text-xs font-semibold text-soft uppercase tracking-wide mb-2 mt-3">Мои друзья</div>
         <div id="friendsListBox" class="space-y-1"></div>
       </section>
-
+ 
       <!-- ===== СООБЩЕНИЯ (полноценный раздел, не всплывающее окно) ===== -->
       <section id="viewMessages" class="hidden">
         <div id="dmListView" class="flex flex-col">
@@ -165,7 +169,7 @@
           </div>
         </div>
       </section>
-
+ 
       <!-- ===== ПРОФИЛЬ (полноценная страница) ===== -->
       <section id="viewProfile" class="hidden">
         <div class="bg-card border border-line rounded-2xl p-5 text-center">
@@ -186,7 +190,7 @@
     </main>
   </div>
 </div>
-
+ 
 <!-- ==== MOBILE BOTTOM TAB BAR (VK-style) ==== -->
 <nav class="bottom-tabbar md:hidden border-t border-line flex items-stretch h-16 pb-[env(safe-area-inset-bottom)]">
   <button class="nav-home tab-btn flex-1 flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium">
@@ -213,7 +217,7 @@
     Профиль
   </button>
 </nav>
-
+ 
 <!-- Вход / Регистрация -->
 <div id="authModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
   <div class="max-w-sm mx-auto mt-10 bg-card border border-line rounded-2xl p-5 fade-in">
@@ -226,7 +230,7 @@
       <div class="flex items-center gap-3 mb-4">
         <img id="regAvatar" class="w-14 h-14 rounded-full bg-ink ring-2 ring-line" alt="" />
         <div>
-          <div class="text-sm font-semibold">Твой анонимный аватар</div>
+          <div class="text-sm font-semibold">Твой аватар</div>
           <button id="rerollAvatar" class="text-xs text-accent hover:underline">Сгенерировать другой</button>
         </div>
       </div>
@@ -246,15 +250,15 @@
         class="w-full bg-ink border border-line rounded-xl px-3.5 py-3 text-sm mb-3 outline-none focus:border-accent" />
     </div>
     <div id="authErr" class="hidden text-xs text-rose-400 mb-2"></div>
-    <button id="btnAuth" class="w-full bg-accent hover:bg-accentDim transition py-3 rounded-xl font-semibold disabled:opacity-50">Создать анонимный аккаунт</button>
+    <button id="btnAuth" class="w-full bg-accent hover:bg-accentDim transition py-3 rounded-xl font-semibold disabled:opacity-50">Создать аккаунт</button>
   </div>
 </div>
-
+ 
 <!-- Новый пост -->
 <div id="postModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
   <div class="max-w-lg mx-auto mt-6 bg-card border border-line rounded-2xl p-5 fade-in">
     <div class="flex items-center justify-between mb-4">
-      <h2 class="font-display text-lg font-bold">Новый анонимный пост</h2>
+      <h2 class="font-display text-lg font-bold">Новый пост</h2>
       <button data-close="postModal" class="text-soft hover:text-white text-2xl leading-none">&times;</button>
     </div>
     <textarea id="postText" rows="4" maxlength="1500" placeholder="Что нового в гимназии?"
@@ -283,7 +287,7 @@
     <p class="text-[11px] text-soft mt-2 text-center">Пост публикуется сразу. Модераторы проверяют ленту и жалобы постфактум.</p>
   </div>
 </div>
-
+ 
 <!-- Жалоба -->
 <div id="reportModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
   <div class="max-w-sm mx-auto mt-16 bg-card border border-line rounded-2xl p-5 fade-in">
@@ -296,7 +300,18 @@
     <button id="btnSendReport" class="w-full mt-3 bg-rose-500 hover:bg-rose-600 transition py-3 rounded-xl font-semibold">Отправить жалобу</button>
   </div>
 </div>
-
+ 
+<!-- Поделиться постом с другом -->
+<div id="shareModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
+  <div class="max-w-sm mx-auto mt-16 bg-card border border-line rounded-2xl p-5 fade-in">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="font-display text-lg font-bold">Отправить другу</h2>
+      <button data-close="shareModal" class="text-soft hover:text-white text-2xl leading-none">&times;</button>
+    </div>
+    <div id="shareFriendsList" class="space-y-1 max-h-72 overflow-y-auto"></div>
+  </div>
+</div>
+ 
 <!-- Админ-панель -->
 <div id="adminModal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
   <div class="max-w-lg mx-auto mt-6 bg-card border border-line rounded-2xl p-5 fade-in">
@@ -319,7 +334,7 @@
     </div>
   </div>
 </div>
-
+ 
 <script>
 /* ============ 1. КОНФИГ ============ */
 const SUPABASE_URL      = "https://xjnaehhhrvcxeuldlcta.supabase.co";
@@ -327,17 +342,17 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const BUCKET = "post-images";
 const PAGE_SIZE = 30;
 const EMAIL_DOMAIN = "gym2.invalid";
-
+ 
 const configured = !SUPABASE_URL.startsWith("ВСТАВЬ") && !SUPABASE_ANON_KEY.startsWith("ВСТАВЬ");
 const db = configured ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
-
+ 
 /* ============ 2. УТИЛИТЫ ============ */
 const $ = (id) => document.getElementById(id);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(16).slice(2));
 const usernameToEmail = (u) => u.toLowerCase() + '@' + EMAIL_DOMAIN;
-
+ 
 function avatarUrl(seed) {
   const s = encodeURIComponent(seed || 'anon');
   return 'https://api.dicebear.com/7.x/bottts-neutral/svg?backgroundColor=223055&seed=' + s;
@@ -356,29 +371,29 @@ const NICK_B = ['Пингвин','Циркуль','Журнал','Кабинет
 const randomNick = () => NICK_A[Math.floor(Math.random()*NICK_A.length)] + '_' + NICK_B[Math.floor(Math.random()*NICK_B.length)] + Math.floor(10 + Math.random()*90);
 const USER_WORDS = ['shadow','ghost','swift','silent','clever','tired','happy','mute','night','quiet','sharp','lucky'];
 const randomUsername = () => USER_WORDS[Math.floor(Math.random()*USER_WORDS.length)] + '_' + USER_WORDS[Math.floor(Math.random()*USER_WORDS.length)] + Math.floor(100 + Math.random()*900);
-
+ 
 function looksLikePersonalData(text) {
   const phone = /(\+?\d[\s-]?){9,13}/;
   const contact = /(vk\.com\/|t\.me\/|wa\.me\/|instagram\.com\/)\S+/i;
   return phone.test(text) || contact.test(text);
 }
-
+ 
 function openModal(id){ $(id).classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
 function closeModal(id){ $(id).classList.add('hidden'); document.body.style.overflow = ''; }
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => closeModal(b.dataset.close));
-document.querySelectorAll('#authModal,#postModal,#reportModal,#adminModal').forEach(m => {
+document.querySelectorAll('#authModal,#postModal,#reportModal,#adminModal,#shareModal').forEach(m => {
   m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); });
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') ['postModal','reportModal','adminModal'].forEach(closeModal);
+  if (e.key === 'Escape') ['postModal','reportModal','adminModal','shareModal'].forEach(closeModal);
 });
 function showErr(el, msg){ el.textContent = msg; el.classList.remove('hidden'); }
 function hideErr(el){ el.classList.add('hidden'); }
-
+ 
 /* ============ 3. АВТОРИЗАЦИЯ ============ */
 let me = null;
 let authMode = 'reg';
-
+ 
 function renderHeaderUser(){
   if (me) {
     $$('.profile-avatar-img').forEach(img => { img.src = avatarUrl(me.avatar_seed); img.classList.remove('hidden'); });
@@ -390,19 +405,19 @@ function renderHeaderUser(){
     $$('.nav-admin').forEach(b => b.classList.add('hidden'));
   }
 }
-
+ 
 async function loadMyProfile(authUser){
   if (!authUser) return null;
   const { data, error } = await db.from('profiles').select('*').eq('id', authUser.id).maybeSingle();
   if (error) { console.error('loadMyProfile error:', error); return null; }
   return data;
 }
-
+ 
 let regSeed = uid();
 $('regAvatar').src = avatarUrl(regSeed);
 $('rerollAvatar').onclick = () => { regSeed = uid(); $('regAvatar').src = avatarUrl(regSeed); };
 $('btnRandomIdentity').onclick = () => { $('inpNick').value = randomNick(); $('inpUsername').value = randomUsername(); };
-
+ 
 function setAuthMode(mode){
   authMode = mode;
   const on = 'flex-1 py-2 rounded-lg font-semibold bg-accent';
@@ -411,14 +426,14 @@ function setAuthMode(mode){
   $('tabLogin').className = mode === 'login' ? on : off;
   $('regFields').classList.toggle('hidden', mode !== 'reg');
   $('loginFields').classList.toggle('hidden', mode !== 'login');
-  $('btnAuth').textContent = mode === 'reg' ? 'Создать анонимный аккаунт' : 'Войти';
+  $('btnAuth').textContent = mode === 'reg' ? 'Создать аккаунт' : 'Войти';
   hideErr($('authErr'));
 }
 $('tabReg').onclick = () => setAuthMode('reg');
 $('tabLogin').onclick = () => setAuthMode('login');
-
+ 
 const USERNAME_RE = /^[a-z0-9_]{5,32}$/;
-
+ 
 $('btnAuth').onclick = async () => {
   if (!db) return showErr($('authErr'), 'Не заданы ключи Supabase.');
   hideErr($('authErr'));
@@ -431,10 +446,10 @@ $('btnAuth').onclick = async () => {
       if (!/^[\p{L}\p{N}_.-]{3,20}$/u.test(nick)) throw new Error('Ник: 3–20 символов, без пробелов.');
       if (!USERNAME_RE.test(username)) throw new Error('Юзернейм: 5–32 символа, только латиница, цифры и _.');
       if (password.length < 6) throw new Error('Пароль — минимум 6 символов.');
-
+ 
       const { data: existing } = await db.from('profiles').select('id').eq('username', username).maybeSingle();
       if (existing) throw new Error('Такой юзернейм уже занят, попробуй другой.');
-
+ 
       const { data: sd, error: se } = await db.auth.signUp({ email: usernameToEmail(username), password });
       if (se) throw new Error(se.message.includes('registered') ? 'Такой юзернейм уже занят.' : se.message);
       const { error: pe } = await db.from('profiles').insert({ id: sd.user.id, username, nickname: nick, avatar_seed: regSeed });
@@ -459,7 +474,7 @@ $('btnAuth').onclick = async () => {
     $('btnAuth').disabled = false;
   }
 };
-
+ 
 function requireAuth(){
   if (me) return true;
   setAuthMode('reg');
@@ -467,11 +482,11 @@ function requireAuth(){
   openModal('authModal');
   return false;
 }
-
+ 
 /* ============ 4. НАВИГАЦИЯ ПО РАЗДЕЛАМ (как вкладки в ВК, не поверх ленты) ============ */
 const VIEW_IDS = { feed: 'viewFeed', friends: 'viewFriends', messages: 'viewMessages', profile: 'viewProfile' };
 let currentView = 'feed';
-
+ 
 function showView(view){
   if (view !== 'feed' && !requireAuth()) return;
   currentView = view;
@@ -491,7 +506,7 @@ $$('.nav-dm').forEach(b => b.onclick = () => showView('messages'));
 $$('.nav-profile').forEach(b => b.onclick = () => showView('profile'));
 $$('.nav-admin').forEach(b => b.onclick = () => { openModal('adminModal'); showAdminTab('reports'); });
 $$('.nav-newpost').forEach(b => b.onclick = () => { if (requireAuth()) { resetPostVisibility(); openModal('postModal'); } });
-
+ 
 /* ============ 5. ПРОФИЛЬ (страница, управление видимостью постов) ============ */
 async function loadProfileView(){
   $('profAvatar').src = avatarUrl(me.avatar_seed);
@@ -534,7 +549,7 @@ $('btnLogout').onclick = async () => {
   await db.auth.signOut();
   me = null; renderHeaderUser(); showView('feed'); loadFeed();
 };
-
+ 
 /* ============ 6. СОЗДАНИЕ ПОСТА (с выбором видимости) ============ */
 let pickedFile = null, pickedUrl = '';
 let postVisibility = 'public';
@@ -545,7 +560,7 @@ function updateVisButtons(){
 }
 $('visPublicBtn').onclick = () => { postVisibility = 'public'; updateVisButtons(); };
 $('visFriendsBtn').onclick = () => { postVisibility = 'friends'; updateVisButtons(); };
-
+ 
 $('btnUrlToggle').onclick = () => $('postUrl').classList.toggle('hidden');
 $('postFile').onchange = (e) => {
   const f = e.target.files[0];
@@ -566,12 +581,12 @@ $('clearImg').onclick = () => {
   pickedFile = null; pickedUrl = ''; $('postFile').value = ''; $('postUrl').value = '';
   $('preview').classList.add('hidden');
 };
-
+ 
 function parseTags(str){
   const found = str.match(/#[\p{L}\p{N}_]+/gu) || [];
   return Array.from(new Set(found.map(t => t.toLowerCase()))).slice(0, 6);
 }
-
+ 
 $('btnPublish').onclick = async () => {
   if (!requireAuth()) return;
   const text = $('postText').value.trim();
@@ -579,7 +594,7 @@ $('btnPublish').onclick = async () => {
   hideErr($('postErr'));
   if (!text && !pickedFile && !pickedUrl) return showErr($('postErr'), 'Добавь текст или изображение.');
   if (looksLikePersonalData(text)) return showErr($('postErr'), 'Похоже, в тексте есть номер телефона или ссылка на личный аккаунт — убери это перед публикацией.');
-
+ 
   $('btnPublish').disabled = true;
   $('btnPublish').textContent = 'Публикуем…';
   try {
@@ -604,7 +619,7 @@ $('btnPublish').onclick = async () => {
     $('btnPublish').textContent = 'Опубликовать';
   }
 };
-
+ 
 /* ============ 7. ЖАЛОБЫ ============ */
 let reportTarget = null;
 function openReport(type, id){
@@ -623,13 +638,21 @@ $('btnSendReport').onclick = async () => {
   if (error) alert('Не удалось отправить жалобу: ' + error.message);
   else alert('Жалоба отправлена модераторам.');
 };
-
+ 
 /* ============ 8. ЛЕНТА ============ */
 let POSTS = [];
 let activeTag = null;
+let feedSort = 'new';
 let loaded = 0;
 const SELECT = 'id,content,image_url,tags,visibility,created_at,author_id,profiles(nickname,username,avatar_seed),likes(user_id),comments(id)';
-
+ 
+$('sortNewBtn').onclick = () => { feedSort = 'new'; updateSortButtons(); renderFeed(); };
+$('sortTopBtn').onclick = () => { feedSort = 'top'; updateSortButtons(); renderFeed(); };
+function updateSortButtons(){
+  $('sortNewBtn').className = 'flex-1 text-sm py-2 rounded-xl border ' + (feedSort === 'new' ? 'bg-accent border-accent text-white' : 'border-line text-soft');
+  $('sortTopBtn').className = 'flex-1 text-sm py-2 rounded-xl border ' + (feedSort === 'top' ? 'bg-accent border-accent text-white' : 'border-line text-soft');
+}
+ 
 async function loadFeed(append){
   if (!db) return;
   if (!append) { loaded = 0; POSTS = []; }
@@ -649,7 +672,7 @@ async function loadFeed(append){
   renderFeed();
 }
 $('btnMore').onclick = () => loadFeed(true);
-
+ 
 function renderTagBar(){
   const counts = {};
   POSTS.forEach(p => (p.tags || []).forEach(t => { counts[t] = (counts[t] || 0) + 1; }));
@@ -660,12 +683,13 @@ function renderTagBar(){
   $('tagBar').innerHTML = chip('Всё', '', !activeTag) + top.map(e => chip(e[0] + ' ' + e[1], e[0], activeTag === e[0])).join('');
   $('tagBar').querySelectorAll('button').forEach(b => b.onclick = () => { activeTag = b.dataset.tag || null; renderTagBar(); renderFeed(); });
 }
-
+ 
 function renderFeed(){
-  const list = activeTag ? POSTS.filter(p => (p.tags || []).includes(activeTag)) : POSTS;
+  let list = activeTag ? POSTS.filter(p => (p.tags || []).includes(activeTag)) : POSTS.slice();
+  if (feedSort === 'top') list = list.slice().sort((a, b) => (b.likes || []).length - (a.likes || []).length);
   if (!list.length) {
     $('feed').innerHTML = '';
-    $('feedState').textContent = 'Пока пусто. Стань первым — создай анонимный пост!';
+    $('feedState').textContent = 'Пока пусто. Стань первым — создай пост!';
     $('feedState').classList.remove('hidden');
     return;
   }
@@ -673,7 +697,8 @@ function renderFeed(){
   $('feed').innerHTML = list.map(cardHTML).join('');
   bindCards();
 }
-
+ 
+ 
 function cardHTML(p){
   const author = p.profiles || { nickname: 'Аноним', username: '', avatar_seed: 'anon' };
   const likes = p.likes || [];
@@ -690,6 +715,7 @@ function cardHTML(p){
         '<div class="text-[11px] text-soft">' + timeAgo(p.created_at) + ' · @' + esc(author.username) + (p.visibility === 'friends' ? ' · 👥 друзья' : '') + '</div>' +
       '</div>' +
       (!mine ? '<button class="dm-btn text-soft hover:text-accent text-sm px-2 py-1" data-uid="' + esc(p.author_id) + '" data-unick="' + esc(author.nickname) + '" data-uuser="' + esc(author.username) + '" data-uavatar="' + esc(author.avatar_seed) + '" title="Написать">✉</button>' : '') +
+      '<button class="share-btn text-soft hover:text-accent text-sm px-2 py-1" title="Отправить другу">📤</button>' +
       '<button class="report-btn text-soft hover:text-rose-400 text-xs px-2 py-1" title="Пожаловаться">⚑</button>' +
     '</div>' +
     (p.content ? '<p class="px-3.5 pb-3 text-[15px] leading-relaxed whitespace-pre-wrap break-words">' + esc(p.content) + '</p>' : '') +
@@ -715,11 +741,11 @@ function cardHTML(p){
     '</div>' +
   '</article>';
 }
-
+ 
 function bindCards(){
   document.querySelectorAll('[data-post]').forEach(card => {
     const id = card.dataset.post;
-
+ 
     card.querySelector('.like-btn').onclick = async () => {
       if (!requireAuth()) return;
       const btn = card.querySelector('.like-btn');
@@ -736,22 +762,23 @@ function bindCards(){
       const p = POSTS.find(x => x.id === id);
       if (p) p.likes = liked ? (p.likes || []).filter(l => l.user_id !== me.id) : (p.likes || []).concat([{ user_id: me.id }]);
     };
-
+ 
     card.querySelector('.cmt-btn').onclick = () => {
       const box = card.querySelector('.cmt-box');
       box.classList.toggle('hidden');
       if (!box.classList.contains('hidden')) loadComments(id, card);
     };
-
+ 
     card.querySelector('.report-btn').onclick = () => openReport('post', id);
-
+    card.querySelector('.share-btn').onclick = () => openShareModal(id);
+ 
     const dmBtn = card.querySelector('.dm-btn');
     if (dmBtn) dmBtn.onclick = () => {
       if (!requireAuth()) return;
       showView('messages');
       openDMThread({ id: dmBtn.dataset.uid, nickname: dmBtn.dataset.unick, username: dmBtn.dataset.uuser, avatar_seed: dmBtn.dataset.uavatar });
     };
-
+ 
     const delBtn = card.querySelector('.del-btn');
     if (delBtn) delBtn.onclick = async () => {
       if (!confirm('Удалить этот пост?')) return;
@@ -759,7 +786,7 @@ function bindCards(){
       if (error) return alert('Не удалось удалить: ' + error.message);
       loadFeed();
     };
-
+ 
     let sending = false;
     const send = async () => {
       if (!requireAuth() || sending) return;
@@ -779,7 +806,7 @@ function bindCards(){
     card.querySelector('.cmt-input').addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
   });
 }
-
+ 
 async function loadComments(postId, card){
   const list = card.querySelector('.cmt-list');
   const { data, error } = await db.from('comments')
@@ -813,10 +840,10 @@ async function loadComments(postId, card){
     };
   });
 }
-
+ 
 /* ============ 9. ДРУЗЬЯ ============ */
 let friendshipMap = new Map();
-
+ 
 async function loadFriendshipMap(){
   const { data } = await db.from('friendships').select('*').or('requester_id.eq.' + me.id + ',addressee_id.eq.' + me.id);
   friendshipMap = new Map();
@@ -856,7 +883,7 @@ function bindFriendButtons(box){
     loadFriendsView();
   });
 }
-
+ 
 let friendSearchTimer = null;
 $('friendSearch').oninput = () => {
   clearTimeout(friendSearchTimer);
@@ -873,12 +900,12 @@ async function searchFriendCandidates(q){
   box.innerHTML = data.map(friendRowHTML).join('');
   bindFriendButtons(box);
 }
-
+ 
 async function loadFriendsView(){
   await loadFriendshipMap();
   $('friendSearch').value = '';
   $('friendSearchResults').innerHTML = '';
-
+ 
   const incoming = Array.from(friendshipMap.values()).filter(f => f.status === 'pending' && f.addressee_id === me.id);
   const reqBox = $('friendRequestsBox');
   if (incoming.length) {
@@ -887,7 +914,7 @@ async function loadFriendsView(){
     reqBox.innerHTML = '<div class="text-xs font-semibold text-soft uppercase tracking-wide mb-2">Заявки в друзья</div>' + (users || []).map(friendRowHTML).join('');
     bindFriendButtons(reqBox);
   } else reqBox.innerHTML = '';
-
+ 
   const acceptedIds = Array.from(friendshipMap.entries()).filter(([, f]) => f.status === 'accepted').map(([id]) => id);
   const listBox = $('friendsListBox');
   if (!acceptedIds.length) { listBox.innerHTML = '<div class="text-soft text-xs">Пока нет друзей. Найди кого-нибудь по юзернейму выше.</div>'; return; }
@@ -895,13 +922,15 @@ async function loadFriendsView(){
   listBox.innerHTML = (users2 || []).map(friendRowHTML).join('');
   bindFriendButtons(listBox);
 }
-
-/* ============ 10. ЛИЧНЫЕ СООБЩЕНИЯ (раздел, не окно) ============ */
+ 
+/* ============ 10. ЛИЧНЫЕ СООБЩЕНИЯ (раздел, не окно; мгновенная отправка) ============ */
 let dmCurrent = null;
+let threadMessages = [];
 $('dmBack').onclick = () => showDMList();
-
+ 
 function showDMList(){
   dmCurrent = null;
+  threadMessages = [];
   $('dmListView').classList.remove('hidden'); $('dmListView').classList.add('flex');
   $('dmThreadView').classList.add('hidden'); $('dmThreadView').classList.remove('flex');
   $('dmSearch').value = '';
@@ -926,7 +955,7 @@ async function loadConversations(){
   const box = $('dmList');
   box.innerHTML = '<div class="text-soft text-xs p-2">Загрузка…</div>';
   const { data, error } = await db.from('messages')
-    .select('id,sender_id,receiver_id,content,created_at,read,sender:profiles!messages_sender_id_fkey(id,nickname,username,avatar_seed),receiver:profiles!messages_receiver_id_fkey(id,nickname,username,avatar_seed)')
+    .select('id,sender_id,receiver_id,content,created_at,read,shared_post_id,sender:profiles!messages_sender_id_fkey(id,nickname,username,avatar_seed),receiver:profiles!messages_receiver_id_fkey(id,nickname,username,avatar_seed)')
     .or('sender_id.eq.' + me.id + ',receiver_id.eq.' + me.id)
     .order('created_at', { ascending: false })
     .limit(200);
@@ -939,7 +968,7 @@ async function loadConversations(){
   });
   const convos = Array.from(byUser.values());
   if (!convos.length) { box.innerHTML = '<div class="text-soft text-xs p-2">Пока нет переписок. Найди кого-нибудь по юзернейму выше.</div>'; return; }
-  box.innerHTML = convos.map(c => dmRowHTML(c.user, c.last.content)).join('');
+  box.innerHTML = convos.map(c => dmRowHTML(c.user, c.last.content || (c.last.shared_post_id ? '📤 Отправил пост' : ''))).join('');
   bindDMRows(box, convos.map(c => c.user));
 }
 function dmRowHTML(u, preview){
@@ -972,30 +1001,62 @@ async function loadThreadMessages(){
   const box = $('dmMessages');
   box.innerHTML = '<div class="text-soft text-xs">Загрузка…</div>';
   const { data, error } = await db.from('messages')
-    .select('id,sender_id,content,created_at')
+    .select('id,sender_id,content,created_at,shared_post_id,shared_post:posts!messages_shared_post_id_fkey(id,content,image_url)')
     .or('and(sender_id.eq.' + me.id + ',receiver_id.eq.' + dmCurrent.id + '),and(sender_id.eq.' + dmCurrent.id + ',receiver_id.eq.' + me.id + ')')
     .order('created_at', { ascending: true }).limit(300);
   if (error) { box.innerHTML = '<div class="text-rose-400 text-xs">' + esc(error.message) + '</div>'; return; }
-  renderMessages(data || []);
+  threadMessages = data || [];
+  renderMessages(threadMessages);
+}
+function messageBubbleHTML(m){
+  const mine = m.sender_id === me.id;
+  let inner;
+  if (m.shared_post_id) {
+    const sp = m.shared_post;
+    inner = '<div class="text-[11px] opacity-80 mb-1">📤 Поделился постом</div>' +
+      (sp ? (
+        '<div class="bg-black/20 rounded-lg p-2 flex gap-2 items-center">' +
+          (safeImg(sp.image_url) ? '<img src="' + esc(sp.image_url) + '" class="w-11 h-11 rounded object-cover shrink-0"/>' : '') +
+          '<div class="text-xs line-clamp-3">' + esc(sp.content || '(без текста)') + '</div>' +
+        '</div>'
+      ) : '<div class="text-xs opacity-70">пост удалён</div>');
+  } else {
+    inner = esc(m.content);
+  }
+  return '<div class="flex ' + (mine ? 'justify-end' : 'justify-start') + '">' +
+    '<div class="' + (mine ? 'bubble-me' : 'bubble-them') + ' max-w-[75%] px-3.5 py-2 text-sm break-words whitespace-pre-wrap ' + (m._pending ? 'opacity-60' : '') + '">' + inner + '</div>' +
+  '</div>';
 }
 function renderMessages(list){
   const box = $('dmMessages');
   if (!list.length) { box.innerHTML = '<div class="text-soft text-xs text-center py-6">Напиши первым.</div>'; return; }
-  box.innerHTML = list.map(m => {
-    const mine = m.sender_id === me.id;
-    return '<div class="flex ' + (mine ? 'justify-end' : 'justify-start') + '">' +
-      '<div class="' + (mine ? 'bubble-me' : 'bubble-them') + ' max-w-[75%] px-3.5 py-2 text-sm break-words whitespace-pre-wrap">' + esc(m.content) + '</div>' +
-    '</div>';
-  }).join('');
+  box.innerHTML = list.map(messageBubbleHTML).join('');
   box.scrollTop = box.scrollHeight;
+}
+function addIncomingMessage(m){
+  if (threadMessages.some(x => x.id === m.id)) return;
+  threadMessages.push(m);
+  threadMessages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  renderMessages(threadMessages);
 }
 async function sendDM(){
   const text = $('dmInput').value.trim();
   if (!text || !dmCurrent) return;
   $('dmInput').value = '';
-  const { error } = await db.from('messages').insert({ sender_id: me.id, receiver_id: dmCurrent.id, content: text });
-  if (error) { alert('Не удалось отправить: ' + error.message); return; }
-  loadThreadMessages();
+  // Мгновенно показываем сообщение в чате, не дожидаясь ответа сервера
+  const tempId = 'local-' + uid();
+  threadMessages.push({ id: tempId, sender_id: me.id, content: text, created_at: new Date().toISOString(), _pending: true });
+  renderMessages(threadMessages);
+  const { data, error } = await db.from('messages').insert({ sender_id: me.id, receiver_id: dmCurrent.id, content: text }).select().single();
+  threadMessages = threadMessages.filter(m => m.id !== tempId);
+  if (error) {
+    renderMessages(threadMessages);
+    alert('Не удалось отправить: ' + error.message);
+    return;
+  }
+  threadMessages.push(data);
+  threadMessages.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  renderMessages(threadMessages);
 }
 $('dmSend').onclick = sendDM;
 $('dmInput').addEventListener('keydown', e => { if (e.key === 'Enter') sendDM(); });
@@ -1005,7 +1066,38 @@ async function refreshDMBadge(){
   const total = count || 0;
   $$('.dm-badge').forEach(b => { b.textContent = total; b.classList.toggle('hidden', total === 0); });
 }
-
+ 
+/* ============ 10б. ПОДЕЛИТЬСЯ ПОСТОМ С ДРУГОМ ============ */
+let shareTargetPostId = null;
+async function openShareModal(postId){
+  if (!requireAuth()) return;
+  shareTargetPostId = postId;
+  await loadFriendshipMap();
+  const acceptedIds = Array.from(friendshipMap.entries()).filter(([, f]) => f.status === 'accepted').map(([id]) => id);
+  const box = $('shareFriendsList');
+  if (!acceptedIds.length) {
+    box.innerHTML = '<div class="text-soft text-xs p-2">Пока нет друзей — добавь кого-нибудь в разделе «Друзья», чтобы делиться постами.</div>';
+    openModal('shareModal');
+    return;
+  }
+  const { data: users } = await db.from('profiles').select('id,nickname,username,avatar_seed').in('id', acceptedIds);
+  box.innerHTML = (users || []).map(u =>
+    '<div class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-ink">' +
+      '<img src="' + avatarUrl(u.avatar_seed) + '" class="w-9 h-9 rounded-full bg-ink ring-1 ring-line"/>' +
+      '<div class="min-w-0 flex-1 text-sm font-semibold truncate">' + esc(u.nickname) + '</div>' +
+      '<button class="share-send-btn text-xs px-3 py-1.5 rounded-lg bg-accent text-white shrink-0" data-uid="' + esc(u.id) + '">Отправить</button>' +
+    '</div>'
+  ).join('');
+  box.querySelectorAll('.share-send-btn').forEach(b => b.onclick = async () => {
+    b.textContent = '...'; b.disabled = true;
+    const { error } = await db.from('messages').insert({ sender_id: me.id, receiver_id: b.dataset.uid, content: '', shared_post_id: shareTargetPostId });
+    if (error) { alert('Не удалось отправить: ' + error.message); b.disabled = false; b.textContent = 'Отправить'; return; }
+    b.textContent = 'Отправлено ✓';
+    setTimeout(() => closeModal('shareModal'), 500);
+  });
+  openModal('shareModal');
+}
+ 
 /* ============ 11. АДМИН-ПАНЕЛЬ ============ */
 $('admTabReports').onclick = () => showAdminTab('reports');
 $('admTabBan').onclick = () => showAdminTab('ban');
@@ -1060,7 +1152,7 @@ async function setBan(banned){
   const { error } = await db.from('profiles').update({ banned }).eq('username', uname);
   $('banMsg').textContent = error ? ('Ошибка: ' + error.message) : (banned ? 'Пользователь заблокирован.' : 'Пользователь разблокирован.');
 }
-
+ 
 /* ============ 12. REALTIME ============ */
 if (db) {
   db.channel('feed-live')
@@ -1070,13 +1162,19 @@ if (db) {
       if (!me) return;
       const m = payload.new;
       if (m.receiver_id !== me.id && m.sender_id !== me.id) return;
-      if (dmCurrent && (m.sender_id === dmCurrent.id || m.receiver_id === dmCurrent.id)) loadThreadMessages();
+      if (dmCurrent && (m.sender_id === dmCurrent.id || m.receiver_id === dmCurrent.id)) {
+        if (m.shared_post_id) loadThreadMessages(); // нужен join с постом — быстрый повторный запрос
+        else addIncomingMessage(m);
+        if (m.sender_id === dmCurrent.id) db.from('messages').update({ read: true }).eq('id', m.id);
+      } else if (currentView === 'messages') {
+        loadConversations();
+      }
       refreshDMBadge();
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships' }, () => { if (currentView === 'friends') loadFriendsView(); })
     .subscribe();
 }
-
+ 
 /* ============ 13. СТАРТ ============ */
 async function start(){
   if (!configured) {
