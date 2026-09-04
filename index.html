@@ -50,6 +50,16 @@
   }
   .tab-btn{color:#8ea0c4}
   .tab-btn.active{color:#e8ecf5}
+  /* поле ввода в чате: на телефоне жёстко прибито над нижней панелью вкладок (h-16 = 64px),
+     на компьютере — обычная часть блока (там нет нижней панели). */
+  .dm-input-row{
+    position:fixed; left:0; right:0; bottom:64px; z-index:44;
+    background:#0b0f1a; border-top:1px solid #223055;
+    padding:.6rem .75rem; padding-bottom:calc(.6rem + env(safe-area-inset-bottom));
+  }
+  @media (min-width:768px){
+    .dm-input-row{ position:static; background:transparent; border-top:none; padding:0; margin-top:.75rem; }
+  }
 </style>
 </head>
 
@@ -152,7 +162,7 @@
             class="w-full bg-card border border-line rounded-xl px-3.5 py-2.5 text-sm outline-none focus:border-accent mb-3" />
           <div id="dmList" class="space-y-1"></div>
         </div>
-        <div id="dmThreadView" class="hidden flex-col" style="height:calc(100dvh - 220px)">
+        <div id="dmThreadView" class="hidden flex-col">
           <div class="flex items-center gap-2 mb-3">
             <button id="dmBack" class="text-soft hover:text-white text-xl px-1">←</button>
             <img id="dmThreadAvatar" class="w-9 h-9 rounded-full bg-ink" alt="" />
@@ -161,8 +171,8 @@
               <div id="dmThreadUsername" class="text-[11px] text-soft truncate"></div>
             </div>
           </div>
-          <div id="dmMessages" class="flex-1 overflow-y-auto space-y-2 pr-1"></div>
-          <div class="flex gap-2 mt-3 pb-2">
+          <div id="dmMessages" class="space-y-2 pr-1 pb-24 md:pb-2"></div>
+          <div class="dm-input-row flex gap-2">
             <input id="dmInput" placeholder="Сообщение…" maxlength="1000"
               class="flex-1 bg-card border border-line rounded-xl px-3 py-2.5 text-sm outline-none focus:border-accent" />
             <button id="dmSend" class="bg-accent hover:bg-accentDim transition px-4 rounded-xl text-sm font-semibold">→</button>
@@ -1037,7 +1047,7 @@ function renderMessages(list){
   const box = $('dmMessages');
   if (!list.length) { box.innerHTML = '<div class="text-soft text-xs text-center py-6">Напиши первым.</div>'; return; }
   box.innerHTML = list.map(messageBubbleHTML).join('');
-  box.scrollTop = box.scrollHeight;
+  window.scrollTo({ top: document.documentElement.scrollHeight });
 }
 function addIncomingMessage(m){
   if (threadMessages.some(x => x.id === m.id)) return;
@@ -1067,11 +1077,7 @@ async function sendDM(){
 $('dmSend').onclick = sendDM;
 $('dmInput').addEventListener('keydown', e => { if (e.key === 'Enter') sendDM(); });
 $('dmInput').addEventListener('focus', () => {
-  document.querySelector('.bottom-tabbar')?.classList.add('hidden');
-  setTimeout(() => { const box = $('dmMessages'); if (box) box.scrollTop = box.scrollHeight; }, 300);
-});
-$('dmInput').addEventListener('blur', () => {
-  document.querySelector('.bottom-tabbar')?.classList.remove('hidden');
+  setTimeout(() => window.scrollTo({ top: document.documentElement.scrollHeight }), 300);
 });
 async function refreshDMBadge(){
   if (!me) return;
