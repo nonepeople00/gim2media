@@ -60,6 +60,12 @@
   @media (min-width:768px){
     .dm-input-row{ position:static; background:transparent; border-top:none; padding:0; margin-top:.75rem; }
   }
+  /* чат занимает весь доступный экран (минус шапка + нижняя панель), сообщения
+     прижимаются к низу — как в Telegram, без большого пустого пробела */
+  #dmThreadView.flex{ min-height: calc(100dvh - 8.5rem); }
+  @media (min-width:768px){
+    #dmThreadView.flex{ min-height: 60vh; }
+  }
 </style>
 </head>
 
@@ -170,8 +176,9 @@
               <div id="dmThreadNick" class="text-sm font-semibold truncate"></div>
               <div id="dmThreadUsername" class="text-[11px] text-soft truncate"></div>
             </div>
+            <button id="dmDeleteChat" class="ml-auto text-soft hover:text-rose-400 text-lg px-2" title="Удалить чат">🗑</button>
           </div>
-          <div id="dmMessages" class="space-y-2 pr-1 pb-24 md:pb-2"></div>
+          <div id="dmMessages" class="flex-1 flex flex-col justify-end space-y-2 pr-1 pb-20 md:pb-2"></div>
           <div class="dm-input-row flex gap-2">
             <input id="dmInput" placeholder="Сообщение…" maxlength="1000"
               class="flex-1 bg-card border border-line rounded-xl px-3 py-2.5 text-sm outline-none focus:border-accent" />
@@ -183,7 +190,15 @@
       <!-- ===== ПРОФИЛЬ (полноценная страница) ===== -->
       <section id="viewProfile" class="hidden">
         <div class="bg-card border border-line rounded-2xl p-5 text-center">
-          <img id="profAvatar" class="w-20 h-20 rounded-full mx-auto ring-2 ring-accent bg-ink" alt="" />
+          <div class="relative w-20 h-20 mx-auto">
+            <img id="profAvatar" class="w-20 h-20 rounded-full ring-2 ring-accent bg-ink object-cover" alt="" />
+            <input id="avatarFile" type="file" accept="image/*" class="hidden" />
+          </div>
+          <div class="flex items-center justify-center gap-3 mt-2">
+            <button id="btnUploadAvatar" class="text-xs text-accent hover:underline">📷 Загрузить фото</button>
+            <button id="btnRandomAvatar" class="text-xs text-soft hover:text-white">🔀 Случайная</button>
+          </div>
+          <div id="avatarErr" class="hidden text-xs text-rose-400 mt-1"></div>
           <div id="profNick" class="mt-3 font-display font-bold text-lg"></div>
           <div id="profUsername" class="text-xs text-soft">@username</div>
           <div class="grid grid-cols-2 gap-2 mt-4 text-sm max-w-xs mx-auto">
@@ -350,6 +365,7 @@
 const SUPABASE_URL      = "https://xjnaehhhrvcxeuldlcta.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhqbmFlaGhocnZjeGV1bGRsY3RhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDIzMjQsImV4cCI6MjEwMjE3ODMyNH0.yqBSbE57IBrW2xhS_exbiKxDjYEKoaTUb8rj79Lh71U";
 const BUCKET = "post-images";
+const AVATAR_BUCKET = "avatars";
 const PAGE_SIZE = 30;
 const EMAIL_DOMAIN = "gym2.invalid";
 
@@ -366,6 +382,11 @@ const usernameToEmail = (u) => u.toLowerCase() + '@' + EMAIL_DOMAIN;
 function avatarUrl(seed) {
   const s = encodeURIComponent(seed || 'anon');
   return 'https://api.dicebear.com/7.x/bottts-neutral/svg?backgroundColor=223055&seed=' + s;
+}
+// Показываем загруженное фото, если оно есть, иначе — сгенерированную иконку.
+function avatarSrc(entity) {
+  if (entity && entity.avatar_url) return entity.avatar_url;
+  return avatarUrl(entity ? entity.avatar_seed : null);
 }
 function safeImg(url) { return /^https?:\/\//i.test(String(url || '')) ? String(url) : ''; }
 function timeAgo(iso) {
@@ -406,7 +427,7 @@ let authMode = 'login';
 
 function renderHeaderUser(){
   if (me) {
-    $$('.profile-avatar-img').forEach(img => { img.src = avatarUrl(me.avatar_seed); img.classList.remove('hidden'); });
+    $$('.profile-avatar-img').forEach(img => { img.src = avatarSrc(me); img.classList.remove('hidden'); });
     $$('.profile-avatar-ph').forEach(ph => ph.classList.add('hidden'));
     $$('.nav-admin').forEach(b => b.classList.toggle('hidden', !me.is_admin));
   } else {
@@ -519,7 +540,7 @@ $$('.nav-newpost').forEach(b => b.onclick = () => { if (requireAuth()) { resetPo
 
 /* ============ 5. ПРОФИЛЬ (страница, управление видимостью постов) ============ */
 async function loadProfileView(){
-  $('profAvatar').src = avatarUrl(me.avatar_seed);
+  $('profAvatar').src = avatarSrc(me);
   $('profNick').textContent = me.nickname;
   $('profUsername').textContent = '@' + me.username;
   const { data: posts } = await db.from('posts').select('id,content,image_url,created_at,visibility,likes(id)').eq('author_id', me.id).order('created_at', { ascending: false });
@@ -558,6 +579,41 @@ function profilePostRowHTML(p){
 $('btnLogout').onclick = async () => {
   await db.auth.signOut();
   me = null; renderHeaderUser(); showView('feed'); loadFeed();
+};
+
+$('btnUploadAvatar').onclick = () => $('avatarFile').click();
+$('avatarFile').onchange = async (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  hideErr($('avatarErr'));
+  if (!f.type.startsWith('image/')) return showErr($('avatarErr'), 'Можно загружать только изображения.');
+  if (f.size > 5 * 1024 * 1024) return showErr($('avatarErr'), 'Файл больше 5 МБ.');
+  $('btnUploadAvatar').textContent = 'Загружаем…';
+  try {
+    const ext = (f.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const path = me.id + '/avatar-' + Date.now() + '.' + ext;
+    const up = await db.storage.from(AVATAR_BUCKET).upload(path, f, { cacheControl: '3600', upsert: true });
+    if (up.error) throw up.error;
+    const publicUrl = db.storage.from(AVATAR_BUCKET).getPublicUrl(path).data.publicUrl;
+    const { error } = await db.from('profiles').update({ avatar_url: publicUrl }).eq('id', me.id);
+    if (error) throw error;
+    me.avatar_url = publicUrl;
+    $('profAvatar').src = avatarSrc(me);
+    renderHeaderUser();
+  } catch (err) {
+    showErr($('avatarErr'), 'Не удалось загрузить: ' + err.message);
+  } finally {
+    $('btnUploadAvatar').textContent = '📷 Загрузить фото';
+    $('avatarFile').value = '';
+  }
+};
+$('btnRandomAvatar').onclick = async () => {
+  const newSeed = uid();
+  const { error } = await db.from('profiles').update({ avatar_seed: newSeed, avatar_url: null }).eq('id', me.id);
+  if (error) return showErr($('avatarErr'), 'Не удалось обновить: ' + error.message);
+  me.avatar_seed = newSeed; me.avatar_url = null;
+  $('profAvatar').src = avatarSrc(me);
+  renderHeaderUser();
 };
 
 /* ============ 6. СОЗДАНИЕ ПОСТА (с выбором видимости) ============ */
@@ -654,7 +710,7 @@ let POSTS = [];
 let activeTag = null;
 let feedSort = 'new';
 let loaded = 0;
-const SELECT = 'id,content,image_url,tags,visibility,created_at,author_id,profiles(nickname,username,avatar_seed),likes(user_id),comments(id)';
+const SELECT = 'id,content,image_url,tags,visibility,created_at,author_id,profiles(nickname,username,avatar_seed,avatar_url),likes(user_id),comments(id)';
 
 $('sortNewBtn').onclick = () => { feedSort = 'new'; updateSortButtons(); renderFeed(); };
 $('sortTopBtn').onclick = () => { feedSort = 'top'; updateSortButtons(); renderFeed(); };
@@ -719,12 +775,12 @@ function cardHTML(p){
   return '' +
   '<article class="bg-card border border-line rounded-2xl overflow-hidden fade-in" data-post="' + esc(p.id) + '">' +
     '<div class="flex items-center gap-3 p-3.5">' +
-      '<img src="' + avatarUrl(author.avatar_seed) + '" class="w-10 h-10 rounded-full bg-ink ring-1 ring-line" alt="" />' +
+      '<img src="' + avatarSrc(author) + '" class="w-10 h-10 rounded-full bg-ink ring-1 ring-line" alt="" />' +
       '<div class="min-w-0">' +
         '<div class="text-sm font-semibold truncate">' + esc(author.nickname) + '</div>' +
         '<div class="text-[11px] text-soft">' + timeAgo(p.created_at) + ' · @' + esc(author.username) + (p.visibility === 'friends' ? ' · 👥 друзья' : '') + '</div>' +
       '</div>' +
-      (!mine ? '<button class="dm-btn text-soft hover:text-accent text-sm px-2 py-1" data-uid="' + esc(p.author_id) + '" data-unick="' + esc(author.nickname) + '" data-uuser="' + esc(author.username) + '" data-uavatar="' + esc(author.avatar_seed) + '" title="Написать">✉</button>' : '') +
+      (!mine ? '<button class="dm-btn text-soft hover:text-accent text-sm px-2 py-1" data-uid="' + esc(p.author_id) + '" data-unick="' + esc(author.nickname) + '" data-uuser="' + esc(author.username) + '" data-uavatar="' + esc(author.avatar_seed) + '" data-uavatarurl="' + esc(author.avatar_url || '') + '" title="Написать">✉</button>' : '') +
       '<button class="report-btn text-soft hover:text-rose-400 text-xs px-2 py-1" title="Пожаловаться">⚑</button>' +
     '</div>' +
     (p.content ? '<p class="px-3.5 pb-3 text-[15px] leading-relaxed whitespace-pre-wrap break-words">' + esc(p.content) + '</p>' : '') +
@@ -789,7 +845,7 @@ function bindCards(){
     if (dmBtn) dmBtn.onclick = () => {
       if (!requireAuth()) return;
       showView('messages');
-      openDMThread({ id: dmBtn.dataset.uid, nickname: dmBtn.dataset.unick, username: dmBtn.dataset.uuser, avatar_seed: dmBtn.dataset.uavatar });
+      openDMThread({ id: dmBtn.dataset.uid, nickname: dmBtn.dataset.unick, username: dmBtn.dataset.uuser, avatar_seed: dmBtn.dataset.uavatar, avatar_url: dmBtn.dataset.uavatarurl || null });
     };
 
     const delBtn = card.querySelector('.del-btn');
@@ -826,13 +882,13 @@ function bindCards(){
 async function loadComments(postId, card){
   const list = card.querySelector('.cmt-list');
   const { data, error } = await db.from('comments')
-    .select('id,content,created_at,author_id,profiles(nickname,avatar_seed)')
+    .select('id,content,created_at,author_id,profiles(nickname,avatar_seed,avatar_url)')
     .eq('post_id', postId).order('created_at', { ascending: true });
   if (error) { list.innerHTML = '<div class="text-rose-400 text-xs">' + esc(error.message) + '</div>'; return; }
   if (!data.length) { list.innerHTML = '<div class="text-soft text-xs">Комментариев пока нет. Напиши первым.</div>'; return; }
   list.innerHTML = data.map(c => '' +
     '<div class="flex gap-2.5" data-cmt="' + esc(c.id) + '">' +
-      '<img src="' + avatarUrl(c.profiles && c.profiles.avatar_seed) + '" class="w-8 h-8 rounded-full bg-ink shrink-0" alt="" />' +
+      '<img src="' + avatarSrc(c.profiles) + '" class="w-8 h-8 rounded-full bg-ink shrink-0" alt="" />' +
       '<div class="bg-ink rounded-xl px-3 py-2 flex-1 min-w-0">' +
         '<div class="text-xs font-semibold flex items-center gap-2">' + esc((c.profiles && c.profiles.nickname) || 'Аноним') +
           '<span class="text-soft font-normal">· ' + timeAgo(c.created_at) + '</span>' +
@@ -877,7 +933,7 @@ function friendActionHTML(u){
 }
 function friendRowHTML(u){
   return '<div class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-card">' +
-    '<img src="' + avatarUrl(u.avatar_seed) + '" class="w-10 h-10 rounded-full bg-ink ring-1 ring-line" />' +
+    '<img src="' + avatarSrc(u) + '" class="w-10 h-10 rounded-full bg-ink ring-1 ring-line" />' +
     '<div class="min-w-0 flex-1"><div class="text-sm font-semibold truncate">' + esc(u.nickname) + '</div><div class="text-[11px] text-soft truncate">@' + esc(u.username) + '</div></div>' +
     friendActionHTML(u) +
   '</div>';
@@ -910,7 +966,7 @@ async function searchFriendCandidates(q){
   await loadFriendshipMap();
   const box = $('friendSearchResults');
   box.innerHTML = '<div class="text-soft text-xs p-2">Поиск…</div>';
-  const { data, error } = await db.from('profiles').select('id,nickname,username,avatar_seed').ilike('username', '%' + q + '%').neq('id', me.id).limit(20);
+  const { data, error } = await db.from('profiles').select('id,nickname,username,avatar_seed,avatar_url').ilike('username', '%' + q + '%').neq('id', me.id).limit(20);
   if (error) { box.innerHTML = '<div class="text-rose-400 text-xs p-2">' + esc(error.message) + '</div>'; return; }
   if (!data.length) { box.innerHTML = '<div class="text-soft text-xs p-2">Никого не нашли.</div>'; return; }
   box.innerHTML = data.map(friendRowHTML).join('');
@@ -926,7 +982,7 @@ async function loadFriendsView(){
   const reqBox = $('friendRequestsBox');
   if (incoming.length) {
     const ids = incoming.map(f => f.requester_id);
-    const { data: users } = await db.from('profiles').select('id,nickname,username,avatar_seed').in('id', ids);
+    const { data: users } = await db.from('profiles').select('id,nickname,username,avatar_seed,avatar_url').in('id', ids);
     reqBox.innerHTML = '<div class="text-xs font-semibold text-soft uppercase tracking-wide mb-2">Заявки в друзья</div>' + (users || []).map(friendRowHTML).join('');
     bindFriendButtons(reqBox);
   } else reqBox.innerHTML = '';
@@ -934,7 +990,7 @@ async function loadFriendsView(){
   const acceptedIds = Array.from(friendshipMap.entries()).filter(([, f]) => f.status === 'accepted').map(([id]) => id);
   const listBox = $('friendsListBox');
   if (!acceptedIds.length) { listBox.innerHTML = '<div class="text-soft text-xs">Пока нет друзей. Найди кого-нибудь по юзернейму выше.</div>'; return; }
-  const { data: users2 } = await db.from('profiles').select('id,nickname,username,avatar_seed').in('id', acceptedIds);
+  const { data: users2 } = await db.from('profiles').select('id,nickname,username,avatar_seed,avatar_url').in('id', acceptedIds);
   listBox.innerHTML = (users2 || []).map(friendRowHTML).join('');
   bindFriendButtons(listBox);
 }
@@ -961,52 +1017,74 @@ $('dmSearch').oninput = () => {
 async function searchUsers(q){
   const box = $('dmList');
   box.innerHTML = '<div class="text-soft text-xs p-2">Поиск…</div>';
-  const { data, error } = await db.from('profiles').select('id,nickname,username,avatar_seed').ilike('username', '%' + q + '%').neq('id', me.id).limit(20);
+  const { data, error } = await db.from('profiles').select('id,nickname,username,avatar_seed,avatar_url').ilike('username', '%' + q + '%').neq('id', me.id).limit(20);
   if (error) { box.innerHTML = '<div class="text-rose-400 text-xs p-2">' + esc(error.message) + '</div>'; return; }
   if (!data.length) { box.innerHTML = '<div class="text-soft text-xs p-2">Никого не нашли.</div>'; return; }
-  box.innerHTML = data.map(u => dmRowHTML(u, '')).join('');
+  box.innerHTML = data.map(u => dmRowHTML(u, '', false)).join('');
   bindDMRows(box, data);
 }
 async function loadConversations(){
   const box = $('dmList');
   box.innerHTML = '<div class="text-soft text-xs p-2">Загрузка…</div>';
-  const { data, error } = await db.from('messages')
-    .select('id,sender_id,receiver_id,content,created_at,read,shared_post_id,sender:profiles!messages_sender_id_fkey(id,nickname,username,avatar_seed),receiver:profiles!messages_receiver_id_fkey(id,nickname,username,avatar_seed)')
-    .or('sender_id.eq.' + me.id + ',receiver_id.eq.' + me.id)
-    .order('created_at', { ascending: false })
-    .limit(200);
+  const [{ data, error }, { data: hides }] = await Promise.all([
+    db.from('messages')
+      .select('id,sender_id,receiver_id,content,created_at,read,shared_post_id,sender:profiles!messages_sender_id_fkey(id,nickname,username,avatar_seed,avatar_url),receiver:profiles!messages_receiver_id_fkey(id,nickname,username,avatar_seed,avatar_url)')
+      .or('sender_id.eq.' + me.id + ',receiver_id.eq.' + me.id)
+      .order('created_at', { ascending: false })
+      .limit(200),
+    db.from('chat_hides').select('other_user_id').eq('user_id', me.id)
+  ]);
   if (error) { box.innerHTML = '<div class="text-rose-400 text-xs p-2">' + esc(error.message) + '</div>'; return; }
+  const hiddenSet = new Set((hides || []).map(h => h.other_user_id));
   const byUser = new Map();
   (data || []).forEach(m => {
     const other = m.sender_id === me.id ? m.receiver : m.sender;
-    if (!other) return;
+    if (!other || hiddenSet.has(other.id)) return;
     if (!byUser.has(other.id)) byUser.set(other.id, { user: other, last: m });
   });
   const convos = Array.from(byUser.values());
   if (!convos.length) { box.innerHTML = '<div class="text-soft text-xs p-2">Пока нет переписок. Найди кого-нибудь по юзернейму выше.</div>'; return; }
-  box.innerHTML = convos.map(c => dmRowHTML(c.user, c.last.content || (c.last.shared_post_id ? '📤 Отправил пост' : ''))).join('');
+  box.innerHTML = convos.map(c => dmRowHTML(c.user, c.last.content || (c.last.shared_post_id ? '📤 Отправил пост' : ''), true)).join('');
   bindDMRows(box, convos.map(c => c.user));
 }
-function dmRowHTML(u, preview){
+function dmRowHTML(u, preview, showDelete){
   return '<div class="dm-row flex items-center gap-3 p-2.5 rounded-xl hover:bg-card cursor-pointer" data-uid="' + esc(u.id) + '">' +
-    '<img src="' + avatarUrl(u.avatar_seed) + '" class="w-10 h-10 rounded-full bg-ink ring-1 ring-line" />' +
+    '<img src="' + avatarSrc(u) + '" class="w-10 h-10 rounded-full bg-ink ring-1 ring-line" />' +
     '<div class="min-w-0 flex-1">' +
       '<div class="text-sm font-semibold truncate">' + esc(u.nickname) + '</div>' +
       '<div class="text-[11px] text-soft truncate">' + (preview ? esc(preview) : '@' + esc(u.username)) + '</div>' +
     '</div>' +
+    (showDelete ? '<button class="dm-del-btn text-soft hover:text-rose-400 text-base px-2 py-1 shrink-0" data-uid="' + esc(u.id) + '" title="Удалить чат">🗑</button>' : '') +
   '</div>';
+}
+async function hideChat(otherUserId){
+  await db.from('chat_hides').upsert({ user_id: me.id, other_user_id: otherUserId }, { onConflict: 'user_id,other_user_id' });
 }
 function bindDMRows(box, users){
   box.querySelectorAll('.dm-row').forEach(row => {
     const u = users.find(x => x.id === row.dataset.uid);
     if (u) row.onclick = () => openDMThread(u);
   });
+  box.querySelectorAll('.dm-del-btn').forEach(btn => {
+    btn.onclick = async (e) => {
+      e.stopPropagation();
+      if (!confirm('Удалить переписку у себя? У собеседника она останется.')) return;
+      await hideChat(btn.dataset.uid);
+      loadConversations();
+    };
+  });
 }
+$('dmDeleteChat').onclick = async () => {
+  if (!dmCurrent) return;
+  if (!confirm('Удалить переписку у себя? У собеседника она останется.')) return;
+  await hideChat(dmCurrent.id);
+  showDMList();
+};
 async function openDMThread(user){
   dmCurrent = user;
   $('dmListView').classList.add('hidden'); $('dmListView').classList.remove('flex');
   $('dmThreadView').classList.remove('hidden'); $('dmThreadView').classList.add('flex');
-  $('dmThreadAvatar').src = avatarUrl(user.avatar_seed);
+  $('dmThreadAvatar').src = avatarSrc(user);
   $('dmThreadNick').textContent = user.nickname;
   $('dmThreadUsername').textContent = '@' + user.username;
   await loadThreadMessages();
@@ -1099,10 +1177,10 @@ async function openShareModal(postId){
     openModal('shareModal');
     return;
   }
-  const { data: users } = await db.from('profiles').select('id,nickname,username,avatar_seed').in('id', acceptedIds);
+  const { data: users } = await db.from('profiles').select('id,nickname,username,avatar_seed,avatar_url').in('id', acceptedIds);
   box.innerHTML = (users || []).map(u =>
     '<div class="flex items-center gap-3 p-2.5 rounded-xl hover:bg-ink">' +
-      '<img src="' + avatarUrl(u.avatar_seed) + '" class="w-9 h-9 rounded-full bg-ink ring-1 ring-line"/>' +
+      '<img src="' + avatarSrc(u) + '" class="w-9 h-9 rounded-full bg-ink ring-1 ring-line"/>' +
       '<div class="min-w-0 flex-1 text-sm font-semibold truncate">' + esc(u.nickname) + '</div>' +
       '<button class="share-send-btn text-xs px-3 py-1.5 rounded-lg bg-accent text-white shrink-0" data-uid="' + esc(u.id) + '">Отправить</button>' +
     '</div>'
